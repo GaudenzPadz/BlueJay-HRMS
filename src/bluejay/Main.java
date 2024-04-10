@@ -18,13 +18,15 @@ public class Main {
     public static GUI adminGUI;
 
     // credentials
+    // in bluejayDB.sqlite
+    // users table
 
     // userpanel Object and
     public static GUI userGui;
 
     public static void main(String[] args) {
         try {
-            //try if database is connected
+            // try if database is connected
             EmployeeDatabase database = new EmployeeDatabase();
 
             // Create login frame and GUI

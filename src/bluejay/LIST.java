@@ -1,6 +1,8 @@
 package bluejay;
 
+import java.awt.BorderLayout;
 import java.awt.Font;
+import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.FocusAdapter;
 import java.awt.event.FocusEvent;
@@ -10,15 +12,19 @@ import java.util.HashMap;
 import java.util.Map;
 
 import javax.swing.DefaultCellEditor;
+import javax.swing.JButton;
 import javax.swing.JComboBox;
 import javax.swing.JLabel;
 import javax.swing.JMenuItem;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.JTextField;
 import javax.swing.RowFilter;
+import javax.swing.SwingWorker;
+import javax.swing.border.TitledBorder;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import javax.swing.table.DefaultTableCellRenderer;
@@ -36,6 +42,9 @@ public class LIST {
 	private static JPopupMenu popupMenu;
 	private static JMenuItem menuItemAdd, menuItemRemove;
 	public static final Map<String, String> workTypeMap = new HashMap<>();
+	public JTextField fNameField, lNameField, addressField;
+	public JButton addButton, deleteButton, resetButton;
+	private JComboBox<String> comboboxWorkType;
 
 	public static JComboBox<String> comboBox;
 	public JScrollPane scrollPane;
@@ -43,6 +52,7 @@ public class LIST {
 	// Create column names
 	private String[] column = { "ID", "First Name", "Last Name", "Address", "Work Type", "Rate", "Gross Pay",
 			"Net Pay" };
+	public static EmployeeDatabase db; 
 
 	public final void workType(TableColumn column) {
 
@@ -146,7 +156,7 @@ public class LIST {
 		menuItemAdd.addActionListener((ActionEvent e) -> {
 			idGeneration(table, model);
 			// Load data from the database
-			reloadData();
+			reloadData(db);
 		});
 
 		popupMenu.add(menuItemAdd);
@@ -166,7 +176,7 @@ public class LIST {
 				db = new EmployeeDatabase();
 				int id = (int) model.getValueAt(rowIndex, 0); // Assuming ID is at column 0
 				db.deleteData(id); // Delete the employee from the database
-				reloadData(); // Reload data to reflect changes
+				reloadData(db); // Reload data to reflect changes
 			} catch (ClassNotFoundException | SQLException e1) {
 				// TODO Auto-generated catch block
 				e1.printStackTrace();
@@ -234,11 +244,9 @@ public class LIST {
 		popupMenu();
 
 		tableDesign();
-		
-		
+
 		// Add JTable to a scroll pane
 		scrollPane = new JScrollPane(table);
-		// frame.add(scrollPane, BorderLayout.CENTER);
 
 		// create a panel for search
 		searchPanel = new JPanel();
@@ -274,32 +282,176 @@ public class LIST {
 		searchPanel.add(searchField);
 
 	}
-	
 
-	public void reloadData() {
-		try {
-			System.out.println("method is called reloadData()");
+	public JPanel addPanel() {
+		
+		JPanel panel = new JPanel();
+		panel.setBorder(new TitledBorder(null, "JPanel title", TitledBorder.LEADING, TitledBorder.TOP, null, null));
+		panel.setLayout(new BorderLayout(0, 0));
 
-			model.setRowCount(0); // Clear existing data in the table model
+		JPanel addPanel = new JPanel();
+		panel.add(addPanel, BorderLayout.NORTH);
+		addPanel.setBorder(new TitledBorder(null, "Add Employee", TitledBorder.LEADING, TitledBorder.TOP, null, null));
+		addPanel.setLayout(new GridLayout(5, 2, 0, 0));
 
-			EmployeeDatabase db = new EmployeeDatabase(); // Create an instance of EmployeeDatabase
-			ResultSet rs = db.getAllData(); // Fetch all employee data
+		JLabel fNameLabel = new JLabel("First Name : ");
+		addPanel.add(fNameLabel);
 
-			while (rs.next()) {
-				// Add fetched data to the table model
-				model.addRow(new Object[] { rs.getInt("id"), rs.getString("first_name"), rs.getString("last_name"),
-						rs.getString("address"), workTypeMap.getOrDefault(rs.getString("work_type"), "Unknown"), // Map
-																													// work
-																													// type
-																													// to
-																													// abbreviation
-						rs.getDouble("rate"), 0.0, // Placeholder for Gross Pay, calculate as needed
-						0.0 // Placeholder for Net Pay, calculate as needed
-				});
+		fNameField = new JTextField();
+		addPanel.add(fNameField);
+		fNameField.setColumns(10);
+
+		JLabel lNameLabel = new JLabel("Last Name : ");
+		addPanel.add(lNameLabel);
+
+		lNameField = new JTextField();
+		addPanel.add(lNameField);
+		lNameField.setColumns(10);
+
+		JLabel address = new JLabel("Address : ");
+		addPanel.add(address);
+
+		addressField = new JTextField();
+		addPanel.add(addressField);
+		addressField.setColumns(10);
+
+		JLabel typeLabel = new JLabel("Work Type : ");
+		addPanel.add(typeLabel);
+
+		comboboxWorkType = new JComboBox<>();
+		addPanel.add(comboboxWorkType);
+		populateComboBox(); // Populate the combo box with data from the database
+
+		addButton = new JButton("Add Employee");
+		addButton.addActionListener((ActionEvent e) -> {
+			try {
+				db.insertData(fNameField.getText(), lNameField.getText(), addressField.getText(),
+						(String) comboboxWorkType.getSelectedItem());
+				reloadData(db);
+				fNameField.setText("");
+				lNameField.setText("");
+				addressField.setText("");
+			} catch (SQLException e1) {
+				// TODO Auto-generated catch block
+				e1.printStackTrace();
 			}
-		} catch (Exception e) {
+		});
+		panel.add(addButton, BorderLayout.SOUTH);
+
+		JPanel CRUDPanel = new JPanel();
+		CRUDPanel.setBorder(new TitledBorder(null, "CRUD Buttons", TitledBorder.LEADING, TitledBorder.TOP, null, null));
+		panel.add(CRUDPanel, BorderLayout.CENTER);
+
+		deleteButton = new JButton("Delete");
+		deleteButton.addActionListener((ActionEvent ae) -> {
+			String idString = JOptionPane.showInputDialog("Enter the ID of the record to delete:");
+			if (idString != null && !idString.isEmpty()) {
+				int id = Integer.parseInt(idString);
+				try {
+					db.deleteData(id);
+				} catch (SQLException e1) {
+					// TODO Auto-generated catch block
+					e1.printStackTrace();
+				}
+				reloadData(db);
+			}
+		});
+		CRUDPanel.add(deleteButton);
+
+		resetButton = new JButton("Reset");
+		resetButton.addActionListener((ActionEvent ae) -> {
+			int confirm = JOptionPane.showConfirmDialog(null, "Are you sure you want to reset the table?",
+					"Reset Table", JOptionPane.YES_NO_OPTION);
+			if (confirm == JOptionPane.YES_OPTION) {
+				try {
+					db.resetTable();
+				} catch (SQLException e1) {
+					// TODO Auto-generated catch block
+					e1.printStackTrace();
+				}
+				reloadData(db);
+
+			}
+		});
+		CRUDPanel.add(resetButton);
+
+		JButton reloadBtn = new JButton("Reload");
+		reloadBtn.addActionListener((ActionEvent ae) -> {
+			reloadData(db);
+		});
+		CRUDPanel.add(reloadBtn);
+		
+
+		return panel;
+	}
+
+	// Method to populate the combo box with data from the database
+	private void populateComboBox() {
+		try {
+			ResultSet rs1 = db.getTypes();
+			while (rs1.next()) {
+				String work_type = rs1.getString("work_type");
+				comboboxWorkType.addItem(work_type);
+			}
+		} catch (SQLException e) {
 			e.printStackTrace();
 		}
 	}
+
+	public void reloadData(EmployeeDatabase db) {
+		SwingWorker<Void, Void> worker = new SwingWorker<Void, Void>() {
+			@Override
+			protected Void doInBackground() throws Exception {
+				try {
+					model.setRowCount(0); // Clear existing data in the table model
+					ResultSet rs = db.getAllData(); // Fetch all employee data
+					int rowCount = 0;
+					while (rs.next()) {
+						// Add fetched data to the table model
+						model.addRow(new Object[] {
+								rs.getInt("id"),
+								rs.getString("first_name"),
+								rs.getString("last_name"),
+								rs.getString("address"),
+								workTypeMap.getOrDefault(rs.getString("work_type"), "Unknown"),
+								rs.getDouble("rate"),
+								0.0, // Placeholder for Gross Pay, calculate as needed
+								0.0 // Placeholder for Net Pay, calculate as needed
+						});
+						rowCount++;
+						setProgress((int) ((double) rowCount / getTotalRowCount() * 100)); // Update progress
+					}
+					db.closeConnection(); // Close the database connection
+				} catch (SQLException e) {
+					// Handle database related exceptions
+					JOptionPane.showMessageDialog(null, "Error fetching data from database: " + e.getMessage(),
+							"Database Error", JOptionPane.ERROR_MESSAGE);
+				} catch (Exception e) {
+					// Handle other exceptions
+					JOptionPane.showMessageDialog(null, "An error occurred: " + e.getMessage(),
+							"Error", JOptionPane.ERROR_MESSAGE);
+				}
+				return null;
+			}
+	
+			// Method to get total row count from database (if needed)
+			private int getTotalRowCount() throws SQLException {
+				ResultSet rs = db.getAllData();
+				int count = 0;
+				while (rs.next()) {
+					count++;
+				}
+				return count;
+			}
+	
+			@Override
+			protected void done() {
+				// Update UI or perform any post-processing tasks if needed
+			}
+		};
+		worker.execute();
+	}
+	
+	
 
 }

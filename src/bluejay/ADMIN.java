@@ -6,12 +6,15 @@ import java.awt.Font;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.sql.SQLException;
 
 import javax.swing.BorderFactory;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
+
+import bluejayDB.EmployeeDatabase;
 
 public class ADMIN extends JPanel {
 
@@ -54,7 +57,6 @@ public class ADMIN extends JPanel {
         JPanel buttonPanel = new JPanel();
 
         buttonPanel.setLayout(new GridLayout(5, 1, 5, 8));
-
       
         JButton button2 = new JButton("Add Employee");
         JButton button3 = new JButton("Pay Roll");
@@ -67,10 +69,18 @@ public class ADMIN extends JPanel {
 		        welcome.removeAll(); // Remove existing components
 		        // Reload when button clicked again
 		        LIST empList = new LIST();
-		        empList.reloadData();
+                try {
+                    LIST.db = new EmployeeDatabase();
+                    empList.reloadData(LIST.db);
+                } catch (ClassNotFoundException | SQLException sqlE) {
+                    // TODO Auto-generated catch block
+                    sqlE.printStackTrace();
+                }
+
 		        // add panels to the contentPanel
 		        welcome.add(empList.searchPanel, BorderLayout.NORTH);
 		        welcome.add(empList.scrollPane, BorderLayout.CENTER);
+
 		        welcome.revalidate(); // Revalidate for layout changes
 		        welcome.repaint();
 		    }
