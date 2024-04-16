@@ -1,10 +1,12 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
-  <modelVersion>4.0.0</modelVersion>
-  <groupId>BJ_HRMS</groupId>
-  <artifactId>HRMS</artifactId>
-  <version>1.0-BETA</version>
-  
-  <dependencies>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+	<groupId>BJ_HRMS</groupId>
+	<artifactId>HRMS</artifactId>
+	<version>1.0-BETA</version>
+
+	<dependencies>
 		<!-- https://mvnrepository.com/artifact/org.xerial/sqlite-jdbc -->
 		<dependency>
 			<groupId>org.xerial</groupId>
@@ -12,18 +14,32 @@
 			<version>3.7.2</version>
 		</dependency>
 
+		<!-- https://www.formdev.com/flatlaf/ -->
+		<dependency>
+			<groupId>com.formdev</groupId>
+			<artifactId>flatlaf</artifactId>
+			<version>3.4.1</version>
+		</dependency>
+
+		<!-- https://mvnrepository.com/artifact/com.miglayout/miglayout-swing -->
+		<dependency>
+			<groupId>com.miglayout</groupId>
+			<artifactId>miglayout-swing</artifactId>
+			<version>5.2</version>
+		</dependency>
+
 	</dependencies>
 
 	<build>
 		<sourceDirectory>src</sourceDirectory>
 
-        <resources>
-            <resource>
-                <directory>resource</directory>
-                <targetPath>${project.build.outputDirectory}</targetPath>
-            </resource>
-        </resources>
-		
+		<resources>
+			<resource>
+				<directory>resource</directory>
+				<targetPath>${project.build.outputDirectory}</targetPath>
+			</resource>
+		</resources>
+
 		<plugins>
 			<plugin>
 				<artifactId>maven-compiler-plugin</artifactId>

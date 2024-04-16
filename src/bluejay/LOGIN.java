@@ -41,7 +41,9 @@ public final class LOGIN extends JPanel {
 
 	public final ImageIcon icon = new ImageIcon(getClass().getResource("/images/background.jpg"));
 	public final Image bg = icon.getImage().getScaledInstance(400, 650, Image.SCALE_DEFAULT);
+	
 
+	
 	@Override
 	protected void paintComponent(Graphics g) {
 		super.paintComponent(g);
@@ -112,7 +114,6 @@ public final class LOGIN extends JPanel {
 			try {
 				processLogin(username, pass);
 			} catch (SQLException e1) {
-				// TODO Auto-generated catch block
 				e1.printStackTrace();
 			}
 		});
@@ -230,6 +231,7 @@ public final class LOGIN extends JPanel {
 				// Display or perform actions specific to ADMIN users
 				Main.loginGUI.dispose();
 				Main.adminGUI = new GUI("Admin", Main.adminPanel, 1000, 700, true, true);
+
 			} else if (loginResult.contains("Welcome")) {
 				// Display or perform actions specific to EMPLOYEE users
 				Main.loginGUI.dispose();

@@ -6,26 +6,19 @@ import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.Font;
 import java.awt.GridLayout;
-import java.awt.Image;
 import java.awt.SystemColor;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.io.File;
-import java.io.IOException;
 import java.sql.SQLException;
-import java.text.SimpleDateFormat;
+import java.sql.Time;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.Scanner;
 
-import javax.imageio.ImageIO;
 import javax.swing.BorderFactory;
 import javax.swing.ButtonGroup;
-import javax.swing.ImageIcon;
 import javax.swing.JButton;
-import javax.swing.JCheckBox;
-import javax.swing.JFileChooser;
 import javax.swing.JLabel;
-import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JRadioButton;
 import javax.swing.JScrollPane;
@@ -38,7 +31,6 @@ import javax.swing.SpinnerDateModel;
 import javax.swing.border.EmptyBorder;
 import javax.swing.border.EtchedBorder;
 import javax.swing.border.TitledBorder;
-import javax.swing.filechooser.FileNameExtensionFilter;
 import javax.swing.table.DefaultTableModel;
 
 import bluejayDB.EmployeeDatabase;
@@ -124,18 +116,17 @@ final class MonthPanel extends JPanel {
 		int colorMonth = date.get(Calendar.MONTH);
 		int colorYear = date.get(Calendar.YEAR);
 
-		if (user.isAbsent(day) && this.month == colorMonth && this.year == colorYear) {
-			return Color.RED;
-		} else {
-			return Color.WHITE;
-		}
+//		if (user.isAbsent(day) && this.month == colorMonth && this.year == colorYear) {
+		return Color.RED;
+//		} else {
+//			return Color.WHITE;
+//		}
 	}
 }
 
 public class USERPANEL extends JPanel implements Runnable {
 
 	private JTable attendanceTable;
-	private JCheckBox overtimeCheckBox;
 	private JTextField firstNameField, middleNameField, workTypeField, basicSalaryField, grossPayField, netPayField,
 			allowancesField, taxField, absencesNumField, pagibigField, dayoffNum, SSSField, addressField, telNumField,
 			emailField, lastNameField, lateNum, leaveNum, totalField, idField;
@@ -145,9 +136,19 @@ public class USERPANEL extends JPanel implements Runnable {
 	private JPanel userInfoSub, picturePanel, attendancePanel, printPanel, payReportPanel, salary, deductions;
 
 	private MonthPanel panel;
-	private ATTENDANCE attendance = new ATTENDANCE();
+	private ATTENDANCE attendance = new ATTENDANCE();;
 	private int employeeId = 1; // Example ID
 	private EmployeeDatabase employeeDb;
+	private String[] column = { "Date", "Time In", "Time Out", "Overtime" };
+	private DefaultTableModel model = new DefaultTableModel(column, 0) {
+		private static final long serialVersionUID = 90L;
+
+		@Override
+		public boolean isCellEditable(int rowIndex, int columnIndex) {
+
+			return false;
+		}
+	};
 
 	@Override
 	public void run() {
@@ -159,6 +160,7 @@ public class USERPANEL extends JPanel implements Runnable {
 	public USERPANEL() {
 		try {
 			employeeDb = new EmployeeDatabase(); // Initialize the EmployeeDatabase
+
 			setMonthPanel();
 			setSize(932, 572);
 			setLayout(new BorderLayout(10, 10));
@@ -222,25 +224,7 @@ public class USERPANEL extends JPanel implements Runnable {
 		// Upload Button
 		JButton uploadBtn = new JButton("Upload");
 		uploadBtn.addActionListener((ActionEvent evt) -> {
-			JFileChooser fileChooser = new JFileChooser();
-			fileChooser.setDialogTitle("Select Profile Picture");
-			fileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
-			FileNameExtensionFilter filter = new FileNameExtensionFilter("Image Files", "jpg", "jpeg", "png", "gif");
-			fileChooser.setFileFilter(filter);
-
-			int returnValue = fileChooser.showOpenDialog(null);
-			if (returnValue == JFileChooser.APPROVE_OPTION) {
-				File selectedFile = fileChooser.getSelectedFile();
-				try {
-					Image img = ImageIO.read(selectedFile);
-					// Resize the image to fit the label
-					ImageIcon icon = new ImageIcon(img.getScaledInstance(100, 100, Image.SCALE_FAST));
-					profilePicture.setText("");
-					profilePicture.setIcon(icon);
-				} catch (IOException e) {
-					JOptionPane.showMessageDialog(null, "Error creating sample data file: " + e.getMessage());
-				}
-			}
+			// method to upload an image from local drive into the database
 		});
 		picturePanel.add(uploadBtn);
 
@@ -302,23 +286,23 @@ public class USERPANEL extends JPanel implements Runnable {
 		otherInfo.add(genderPanel);
 
 		try {
-            Employee employee = employeeDb.getEmployeeById(employeeId);
-            if (employee != null) {
-                // Update UI components with employee data
-                idField.setText(String.valueOf(employee.getId()));
-                firstNameField.setText(employee.getFirstName());
-                lastNameField.setText(employee.getLastName());
-                // Assume middleName and workType are available in the Employee class
-                middleNameField.setText(employee.getMiddleName());
-                workTypeField.setText(employee.getWorkType());
-            } else {
-                // Handle case where employee is not found
-                System.out.println("Employee not found.");
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
-            // Handle SQL exceptions
-        }
+			Employee employee = employeeDb.getEmployeeById(employeeId);
+			if (employee != null) {
+				// Update UI components with employee data
+				idField.setText(String.valueOf(employee.getId()));
+				firstNameField.setText(employee.getFirstName());
+				lastNameField.setText(employee.getLastName());
+				// Assume middleName and workType are available in the Employee class
+				middleNameField.setText(employee.getMiddleName());
+				workTypeField.setText(employee.getWorkType());
+			} else {
+				// Handle case where employee is not found
+				System.out.println("Employee not found.");
+			}
+		} catch (SQLException e) {
+			e.printStackTrace();
+			// Handle SQL exceptions
+		}
 
 		return userInfoPanel;
 	}
@@ -331,19 +315,13 @@ public class USERPANEL extends JPanel implements Runnable {
 		calendarPanel.add(panel, BorderLayout.CENTER);
 		attendancePanel.add(calendarPanel, BorderLayout.NORTH);
 
-		// Create a DefaultTableModel to hold the data for the JTable
-		DefaultTableModel model = new DefaultTableModel();
-		model.addColumn("Time In");
-		model.addColumn("Time Out");
-		model.addColumn("Overtime");
-
 		attendanceTable = new JTable(model);
 		attendanceTable.setSelectionMode(ListSelectionModel.SINGLE_INTERVAL_SELECTION);
 		attendanceTable.setPreferredScrollableViewportSize(new Dimension(300, 100));
 		JScrollPane sp = new JScrollPane(attendanceTable);
 		attendancePanel.add(sp, BorderLayout.CENTER);
 
-		JPanel inputPanel = new JPanel(new GridLayout(3, 2, 5, 5));
+		JPanel inputPanel = new JPanel(new GridLayout(4, 2, 5, 5));
 		inputPanel.setBorder(new EmptyBorder(10, 10, 10, 10));
 
 		JLabel timeInLabel = new JLabel("Time In:");
@@ -370,31 +348,36 @@ public class USERPANEL extends JPanel implements Runnable {
 		timeOutSpinner.setEditor(timeOutEditor);
 		inputPanel.add(timeOutSpinner);
 
-		overtimeCheckBox = new JCheckBox("Overtime");
-		inputPanel.add(overtimeCheckBox);
+		JLabel overtimeLabel = new JLabel("Overtime (how many hours?) :");
+		inputPanel.add(overtimeLabel);
+
+		JSpinner overtime = new JSpinner();
+		inputPanel.add(overtime);
 
 		addAttendanceButton = new JButton("Add Attendance");
-		// Add action listener to the button to add data to the table
 		addAttendanceButton.addActionListener(e -> {
+			// Retrieve data from input fields
+			Calendar calendar = Calendar.getInstance();
+			Date date = calendar.getTime();
 
-			Date selectedDate = (Date) timeInSpinner.getValue();
-			SimpleDateFormat dateFormat = new SimpleDateFormat("hh:mm a");
-			String timeIn = (dateFormat.format(selectedDate));
+			// Convert util Date to sql Date
+			java.sql.Date sqlDate = new java.sql.Date(date.getTime());
 
-			Date selectedDate2 = (Date) timeOutSpinner.getValue();
-			SimpleDateFormat dateFormat2 = new SimpleDateFormat("hh:mm a");
-			String timeOut = (dateFormat2.format(selectedDate2));
+			// Get time from Spinner
+			Date timeInDate = (Date) timeInSpinner.getValue();
+			Time timeIn = new Time(timeInDate.getTime());
 
-			boolean overtime = overtimeCheckBox.isSelected();
+			Date timeOutDate = (Date) timeOutSpinner.getValue();
+			Time timeOut = new Time(timeOutDate.getTime());
 
-			// Create an Attendance object with the entered data
-			attendance = new ATTENDANCE(timeIn, timeOut, overtime);
+			int overtimeValue = (int) overtime.getValue();
 
-			// Add the data to the table
-			model.addRow(new Object[] { attendance.getTimeIn(), attendance.getTimeOut(), attendance.isOvertime() });
-
-			overtimeCheckBox.setSelected(false);
+			// Call method to insert attendance data into database
+			employeeDb.insertAttendanceData(firstNameField.getText(), sqlDate, timeIn, timeOut, overtimeValue);
+			// Read attendance data and update the table model
+			employeeDb.readAttendanceData((DefaultTableModel) attendanceTable.getModel());
 		});
+
 		inputPanel.add(addAttendanceButton);
 
 		attendancePanel.add(inputPanel, BorderLayout.SOUTH);
@@ -591,9 +574,84 @@ public class USERPANEL extends JPanel implements Runnable {
 		Calendar calendar = Calendar.getInstance();
 		int year = calendar.get(Calendar.YEAR);
 		int month = calendar.get(Calendar.MONTH);
-		attendance.setAbsent(21); // Mark the 5th day as absent
+		// attendance.setAbsent(21); // Mark the 5th day as absent
 		panel = new MonthPanel(month, year, attendance); // Initialize panel here
 
 	}
 
+}
+
+class payrollprogram {
+	static int presntdays(int workdays, int salperday) {
+		int monthsal = workdays * salperday;
+		return monthsal;
+	}
+
+	static double deduc(double philhealth, double pagibig, double sss) {
+		double totaldeduc = philhealth + pagibig + sss;
+		return totaldeduc;
+	}
+
+	public static void main(String a[]) {
+		Scanner s = new Scanner(System.in);
+
+		System.out.print("Enter full name : ");
+		String name = s.nextLine();
+		System.out.print("Enter basic salary : ");
+		int salperday = s.nextInt();
+
+		System.out.print("enter the day today(day of the month): ");
+		int DayOfMonth = s.nextInt();
+
+		// kapag ang date ng buwan ay 15
+		if (DayOfMonth == 15) {
+			System.out.print("(period of 1 - 15)\ndays of absence(1 - 15) : ");
+			int absent = s.nextInt();
+			int workingdays = 15 - absent;
+			int monthlysal = presntdays(salperday, workingdays);
+
+			System.out.println("\nWELDWELL PAYROLL");
+			System.out.println(" Name : " + name);
+			System.out.println(" Salary per day: PHP " + salperday);
+			System.out.println(" Days of work : " + workingdays);
+			System.out.println(" Absent : " + absent);
+			System.out.println(" Overtime : N/A");
+			System.out.println("\nDeductions:");
+			System.out.println("- SSS : N/A");
+			System.out.println("- Pag-IBIG : N/A ");
+			System.out.println("- PhilHealth : N/A ");
+			System.out.println("\nTotal Deductions: N/A ");
+			System.out.println("Net Salary: PHP " + monthlysal);
+		}
+		// kapag ang date ng buwan ay 30
+		else if (DayOfMonth == 30) {
+			double sss = 570.00;
+			double pagibig = 100.00;
+			double philhealth = 500.00;
+
+			System.out.print(" (period of 16 - 30)\ndays of absence(1 - 15) : ");
+			int absence = s.nextInt();
+			int workday = 15 - absence;
+			int monthsalary = presntdays(salperday, workday);
+
+			double deduction = deduc(philhealth, pagibig, sss);
+			double netsal = monthsalary - deduction;
+
+			System.out.println("\nWELDWELL PAYROLL");
+			System.out.println("Name : " + name);
+			System.out.println(" Salary per day: PHP " + salperday);
+			System.out.println(" Days of work : " + workday);
+			System.out.println(" Absent : " + absence);
+			System.out.println(" Overtime : N/A");
+			System.out.println("\nDeductions:");
+			System.out.println("- SSS : PHP " + sss);
+			System.out.println("- Pag-IBIG : PHP " + pagibig);
+			System.out.println("- PhilHealth : PHP " + philhealth);
+			System.out.println("\nTotal Deductions: PHP " + deduction);
+			System.out.println("Net Salary: PHP " + netsal);
+		} else {
+			System.out.println("today is not a Pay day");
+		}
+
+	}
 }

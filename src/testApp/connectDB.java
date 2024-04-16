@@ -87,7 +87,7 @@ public class connectDB {
 
 	public static AddingPanel addPanel;
 	public static JTable table;
-
+	static DefaultTableModel tableModel;
 	public static void main(String[] args) throws SQLException, ClassNotFoundException {
 
 		JFrame frame = new JFrame("Employee Data");
@@ -100,22 +100,16 @@ public class connectDB {
 
 		connectDB cs = new connectDB();
 
-		// Get all data from the database
+		
+		table = new JTable(tableModel);
 		ResultSet rs = cs.getAllData();
-
-		// Define table model and column names based on your table schema
-		String[] columns = { "ID", "First Name", "Last Name", "Address", "Work Type", "Rate", "Gross Pay", "" }; // Modify
-		DefaultTableModel tableModel = new DefaultTableModel(columns, 0);
-
-		// Add each row from ResultSet to the table model
+		tableModel = (DefaultTableModel) table.getModel();
+		tableModel.setRowCount(0);
 		while (rs.next()) {
 			Object[] row = { rs.getInt("id"), rs.getString("first_name"), rs.getString("last_name"),
-					rs.getString("address"), rs.getString("work_type"), rs.getInt("rate") };
+					rs.getString("address"), rs.getString("work_type") };
 			tableModel.addRow(row);
 		}
-
-		table = new JTable(tableModel);
-
 		frame.getContentPane().add(new JScrollPane(table), BorderLayout.CENTER); // Add JScrollPane for the table
 		addPanel = new AddingPanel(cs);
 		frame.getContentPane().add(connectDB.addPanel, BorderLayout.SOUTH); // Add AddingPanel to the bottom of the
@@ -126,6 +120,7 @@ public class connectDB {
 		frame.setVisible(true);
 
 	}
+
 }
 
 class DataReloader extends Thread {

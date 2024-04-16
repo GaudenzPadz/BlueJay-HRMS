@@ -1,54 +1,64 @@
 package bluejay;
 
-import java.util.HashMap;
+import java.sql.Time;
+import java.util.Date;
 
 public class ATTENDANCE {
-	private String timeIn;
-	private String timeOut;
-	private boolean overtime;
+    private String name;
+    private Date date;
+    private Time clockInTime, clockOutTime;
+    private double overtimeHours;
 
-	public ATTENDANCE() {
+    public ATTENDANCE() {
+    }
 
-	}
+    public ATTENDANCE(String name, Date date, Time clockInTime, Time clockOutTime, double overtimeHours) {
+        this.name = name;
+        this.date = date;
+        this.clockInTime = clockInTime;
+        this.clockOutTime = clockOutTime;
+        this.overtimeHours = overtimeHours;
+    }
 
-	public ATTENDANCE(String timeIn, String timeOut, boolean overtime) {
-		this.timeIn = timeIn;
-		this.timeOut = timeOut;
-		this.overtime = overtime;
-	}
+    // Getters and setters
+    public String getName() {
+        return name;
+    }
 
-	// Getters and setters
-	public String getTimeIn() {
-		return timeIn;
-	}
+    public void setName(String name) {
+        this.name = name;
+    }
 
-	public void setTimeIn(String timeIn) {
-		this.timeIn = timeIn;
-	}
+    public Date getDate() {
+        return date;
+    }
 
-	public String getTimeOut() {
-		return timeOut;
-	}
+    public void setDate(Date date) {
+        this.date = date;
+    }
 
-	public void setTimeOut(String timeOut) {
-		this.timeOut = timeOut;
-	}
+    public Time getClockInTime() {
+        return clockInTime;
+    }
 
-	public boolean isOvertime() {
-		return overtime;
-	}
+    public void setClockInTime(Time time) {
+        this.clockInTime = time;
+    }
 
-	public void setOvertime(boolean overtime) {
-		this.overtime = overtime;
-	}
+    public Time getClockOutTime() {
+        return clockOutTime;
+    }
 
-	HashMap<Integer, Boolean> absences = new HashMap<>();
+    public void setClockOutTime(Time time) {
+        this.clockOutTime = time;
+    }
 
-	public void setAbsent(int day) {
-		absences.put(day, true);
-	}
+    public double getOvertimeHours() {
+        return overtimeHours;
+    }
 
-	public boolean isAbsent(int day) {
-		return absences.getOrDefault(day, false);
-	}
+    public void setOvertimeHours(double overtimeHours) {
+        this.overtimeHours = overtimeHours;
+    }
+	
 }
