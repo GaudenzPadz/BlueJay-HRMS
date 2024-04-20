@@ -34,6 +34,27 @@ public class EmployeeDatabase {
 		return connection;
 	}
 
+	public String validateLogin(String username, String password) {
+		try {
+			String sql = "SELECT name FROM users WHERE username = ? AND password = ?";
+			PreparedStatement statement = connection.prepareStatement(sql);
+			statement.setString(1, username);
+			statement.setString(2, password);
+			ResultSet rs = statement.executeQuery();
+
+			if (rs.next()) {
+				String name = rs.getString("name");
+				return "Login successful! Welcome " + name;
+			} else {
+				return "Invalid username or password.";
+			}
+
+		} catch (SQLException e) {
+			e.printStackTrace();
+			return "Cant connect"; // replace with better idk
+		}
+	}
+
 	public ResultSet getAllData() throws SQLException {
 		if (connection == null) {
 			throw new SQLException("Connection is null. Make sure to establish the connection.");
@@ -87,7 +108,7 @@ public class EmployeeDatabase {
 		return lastId;
 	}
 
-	public void deleteData(int id) {
+	public void deleteEmployeeData(int id) {
 		try {
 			PreparedStatement statement = connection.prepareStatement("DELETE FROM employees WHERE id = ?");
 			statement.setInt(1, id);
@@ -111,27 +132,6 @@ public class EmployeeDatabase {
 		}
 	}
 
-	public String validateLogin(String username, String password) {
-		try {
-			String sql = "SELECT name FROM users WHERE username = ? AND password = ?";
-			PreparedStatement statement = connection.prepareStatement(sql);
-			statement.setString(1, username);
-			statement.setString(2, password);
-			ResultSet rs = statement.executeQuery();
-
-			if (rs.next()) {
-				String name = rs.getString("name");
-				return "Login successful! Welcome " + name;
-			} else {
-				return "Invalid username or password.";
-			}
-
-		} catch (SQLException e) {
-			e.printStackTrace();
-			return "Cant connect"; //replace with better idk 
-		}
-	}
-
 	public Employee getEmployeeById(int id) throws SQLException {
 		String sql = "SELECT * FROM employees WHERE id = ?";
 		PreparedStatement statement = connection.prepareStatement(sql);
@@ -150,14 +150,24 @@ public class EmployeeDatabase {
 		}
 	}
 
-	public void updateEmployee(Employee employee) throws SQLException {
-		String sql = "UPDATE employees SET first_name = ?, last_name = ? WHERE id = ?";
-		PreparedStatement statement = connection.prepareStatement(sql);
-		statement.setString(1, employee.getFirstName());
-		statement.setString(2, employee.getLastName());
-		statement.setInt(3, employee.getId());
-		// Set other fields and parameters as needed
-		statement.executeUpdate();
+	public void updateEmployee(Employee employee) {
+		String sql = "UPDATE employees SET first_name = ?, last_name = ?, address = ?, work_type = ?, rate = ? WHERE id = ?";
+		try {
+			PreparedStatement statement = connection.prepareStatement(sql);
+			statement.setString(1, employee.getFirstName());
+			statement.setString(2, employee.getLastName());
+			statement.setString(3, employee.getAddress());
+			statement.setString(4, employee.getWorkType());
+			statement.setDouble(5, employee.getRate());
+
+			// ID should be the last parameter
+			statement.setInt(6, employee.getId());
+
+			statement.executeUpdate();
+			System.out.println("Record updated.");
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
 	}
 
 	public void insertAttendanceData(String name, Date date, Time timeIn, Time timeOut, int overtime) {
@@ -184,6 +194,30 @@ public class EmployeeDatabase {
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}
+	}
+
+	public ResultSet getAllAttendanceData() {
+		try {
+			PreparedStatement statement = connection.prepareStatement("SELECT * FROM attendance");
+			return statement.executeQuery();
+		} catch (SQLException e) {
+			return null;
+		}
+	}
+
+	public double countAttendances(String name) {
+		try {
+			PreparedStatement statement = connection
+					.prepareStatement("SELECT COUNT(*) AS count FROM attendance WHERE name = ?");
+			statement.setString(1, name);
+			ResultSet rs = statement.executeQuery();
+			if (rs.next()) {
+				return rs.getInt("count");
+			}
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+		return 0;
 	}
 
 	public void readAttendanceData(DefaultTableModel model) {

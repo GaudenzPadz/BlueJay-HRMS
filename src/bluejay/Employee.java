@@ -27,21 +27,17 @@ public class Employee {
 	private String email;
 	private Date dateHired;
 
-	// Constants for work types and their corresponding wage per day
-	private double SMAW_WAGE = 500;
-	private double GTAW_WAGE = 900;
-	private double FCAW_WAGE = 900;
-	private double GMAW_WAGE = 1000;
 
 	public Employee() {
 
 	}
 
-	public Employee(int id, String firstName, String lastName, String address, String workType, double rate,
+	public Employee(int id, String firstName, String middleName, String lastName, String address, String workType, double rate,
 			double grossPay, double netPay, String gender) {
 		// Initialize
 		this.id = id;
 		this.firstName = firstName;
+		this.middleName = middleName;
 		this.lastName = lastName;
 		this.address = address;
 		this.workType = workType;
@@ -241,14 +237,10 @@ public class Employee {
 	// METHODS TO CALCULATE
 
 	// Method to calculate the total deduction
-	public double totalDeductions(double philhealth, double pagibig, double sss) {
-		return philhealth + pagibig + sss;
-	}
-
-	public double total() {
+	public double totalDeductions() {
 		return getPAG_IBIG() + getPHILHEALTH() + getSSS();
 	}
-
+	
 	// Method to calculate gross pay
 	public double calculateGrossPay(double daysWorked, double wagePerDay) {
 		return daysWorked * wagePerDay;

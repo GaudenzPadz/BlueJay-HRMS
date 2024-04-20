@@ -27,12 +27,14 @@ import com.formdev.flatlaf.FlatLightLaf;
 
 import net.miginfocom.swing.MigLayout;
 
-public class testingUI extends JFrame {
+public class testingUI {
 
-	private static final long serialVersionUID = 1L;
-	private JPanel contentPane;
-	private JPanel panel_1;
-	private JTextField textField;
+	private static JPanel contentPane;
+	private static JPanel panel_1;
+	private static JTextField textField;
+	private static JFrame frame;
+	private static JLabel clockLabel;
+	private static SimpleDateFormat timeFormat;
 
 	/**
 	 * Launch the application.
@@ -52,9 +54,123 @@ public class testingUI extends JFrame {
 					ex.printStackTrace();
 				}
 				try {
-					testingUI frame = new testingUI();
+					frame = new JFrame();
 					frame.setVisible(true);
+					frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+					frame.setSize(767, 490);
+					contentPane = new JPanel();
+					contentPane.setBorder(new EmptyBorder(5, 5, 5, 5));
 
+					frame.setContentPane(contentPane);
+					contentPane.setLayout(new BorderLayout(0, 0));
+
+					JPanel sidePanel = new JPanel();
+					sidePanel.setBackground(Color.PINK);
+					contentPane.add(sidePanel, BorderLayout.WEST);
+					sidePanel.setLayout(new MigLayout("", "[40.00px][40px][40px]", "[48px][][]"));
+
+					JLabel backBtn = new JLabel();
+
+					sidePanel.add(backBtn, "cell 0 0,alignx left,aligny top");
+
+					JPanel mainPanel = mainPanel();
+					mainPanel.setBackground(Color.LIGHT_GRAY);
+
+					// Create an instance of sideMenu
+					sideMenu sideMenu = new sideMenu(sidePanel, mainPanel);
+					sideMenu.setSideMaxWidth(150);
+					sideMenu.setSideMinimumWidth(55);
+					sideMenu.setAnimationDuration(90); // 90 millie seconds
+
+					contentPane.add(mainPanel);
+					panel_1.setLayout(null);
+
+					JLabel welcomeLabel = new JLabel("Welcome to the Material UI Test App");
+					welcomeLabel.setBounds(158, 59, 215, 35);
+					welcomeLabel.setHorizontalAlignment(SwingConstants.CENTER);
+					mainPanel.add(welcomeLabel);
+
+					JButton btnNewButton = new JButton("New button");
+					btnNewButton.setBounds(212, 233, 89, 23);
+					panel_1.add(btnNewButton);
+
+					textField = new JTextField();
+					textField.setBounds(212, 271, 86, 20);
+					panel_1.add(textField);
+					textField.setColumns(10);
+
+					JPanel clockPanel = new JPanel();
+					clockPanel.setBounds(346, 117, 200, 200);
+					clockLabel = new JLabel();
+					timeFormat = new SimpleDateFormat("HH:mm:ss"); // 24-hour format
+					clockLabel.setFont(clockLabel.getFont().deriveFont(36.0f)); // Larger font for better visibility
+
+					Timer timer = new Timer(1000, new ActionListener() {
+						@Override
+						public void actionPerformed(ActionEvent e) {
+							clockLabel.setText(timeFormat.format(Calendar.getInstance().getTime()));
+						}
+					});// Update every second
+					
+					timer.start();
+
+					clockPanel.add(clockLabel);
+					panel_1.add(clockPanel);
+
+					backBtn.addMouseListener(new MouseAdapter() {
+						@Override
+						public void mouseClicked(MouseEvent e) {
+							sideMenu.toggleMenuWithAnimation();
+//							sideMenu.toggleMenu(); use this if animation is not needed
+
+						}
+					});
+					// scaling back icon BECAUSE AYAW KONG MAG EDIT
+					ImageIcon backIcon = new ImageIcon(getClass().getResource("/images/back.png"));
+					Image scaledImage = backIcon.getImage().getScaledInstance(30, 30, Image.SCALE_SMOOTH); // w, h, scale the image
+					backIcon = new ImageIcon(scaledImage);
+					backBtn.setIcon(backIcon); // Set the resized icon to the button
+
+					JLabel homeBtn = new JLabel();
+
+					sidePanel.add(homeBtn, "cell 0 1,alignx left,aligny top");
+					homeBtn.addMouseListener(new MouseAdapter() {
+						@Override
+						public void mouseClicked(MouseEvent e) {
+							System.out.println("home");
+							contentPane.remove(1); // Remove the current main panel
+							JPanel home = homePanel();
+							contentPane.add(home, BorderLayout.CENTER);
+							contentPane.revalidate();
+							contentPane.repaint();
+						}
+					});
+
+					homeBtn.setIcon(new ImageIcon(getClass().getResource("/images/home.png")));
+
+					JLabel lblNewLabel = new JLabel("Home");
+					lblNewLabel.setHorizontalAlignment(SwingConstants.CENTER);
+					sidePanel.add(lblNewLabel, "cell 1 1 2 1,alignx center");
+
+					JLabel documentBtn = new JLabel();
+
+					sidePanel.add(documentBtn, "cell 0 2,alignx left,aligny top");
+
+					documentBtn.addMouseListener(new MouseAdapter() {
+						@Override
+						public void mouseClicked(MouseEvent e) {
+							JPanel documentPanel = new JPanel();
+							JLabel documentLabel = new JLabel("welcomePanel");
+							documentLabel.setHorizontalAlignment(SwingConstants.CENTER);
+							documentPanel.add(documentLabel);
+							contentPane.remove(1); // Remove the current main panel
+							JPanel document = documentPanel();
+							contentPane.add(document, BorderLayout.CENTER);
+							contentPane.revalidate();
+							contentPane.repaint();
+						}
+					});
+					documentBtn.setIcon(new ImageIcon(getClass().getResource("/images/document.png")));
 				} catch (Exception e) {
 					e.printStackTrace();
 				}
@@ -62,137 +178,14 @@ public class testingUI extends JFrame {
 		});
 	}
 
-	private JPanel mainPanel() {
+	private static JPanel mainPanel() {
 		panel_1 = new JPanel();
 		panel_1.setBackground(Color.BLUE);
 		return panel_1;
 	}
 
-	private JLabel clockLabel;
-	private SimpleDateFormat timeFormat;
 
-	/**
-	 * Create the frame.
-	 */
-	public testingUI() {
-		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		setSize(767, 490);
-		contentPane = new JPanel();
-		contentPane.setBorder(new EmptyBorder(5, 5, 5, 5));
-
-		setContentPane(contentPane);
-		contentPane.setLayout(new BorderLayout(0, 0));
-
-		JPanel sidePanel = new JPanel();
-		sidePanel.setBackground(Color.PINK);
-		contentPane.add(sidePanel, BorderLayout.WEST);
-		sidePanel.setLayout(new MigLayout("", "[40.00px][40px][40px]", "[48px][][]"));
-
-		JLabel backBtn = new JLabel();
-
-		sidePanel.add(backBtn, "cell 0 0,alignx left,aligny top");
-
-		JPanel mainPanel = mainPanel();
-		mainPanel.setBackground(Color.LIGHT_GRAY);
-
-		// Create an instance of sideMenu
-		sideMenu sideMenu = new sideMenu(sidePanel, mainPanel);
-		sideMenu.setSideMaxWidth(150);
-		sideMenu.setSideMinimumWidth(55);
-		sideMenu.setAnimationDuration(90); // 90 millie seconds
-
-		contentPane.add(mainPanel);
-		panel_1.setLayout(null);
-
-		JLabel welcomeLabel = new JLabel("Welcome to the Material UI Test App");
-		welcomeLabel.setBounds(158, 59, 215, 35);
-		welcomeLabel.setHorizontalAlignment(SwingConstants.CENTER);
-		mainPanel.add(welcomeLabel);
-
-		JButton btnNewButton = new JButton("New button");
-		btnNewButton.setBounds(212, 233, 89, 23);
-		panel_1.add(btnNewButton);
-
-		textField = new JTextField();
-		textField.setBounds(212, 271, 86, 20);
-		panel_1.add(textField);
-		textField.setColumns(10);
-
-		JPanel clockPanel = new JPanel();
-		clockPanel.setBounds(346, 117, 200, 200);
-		clockLabel = new JLabel();
-		timeFormat = new SimpleDateFormat("HH:mm:ss"); // 24-hour format
-		clockLabel.setFont(clockLabel.getFont().deriveFont(36.0f)); // Larger font for better visibility
-
-		Timer timer = new Timer(1000, new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				clockLabel.setText(timeFormat.format(Calendar.getInstance().getTime()));
-			}
-		});// Update every second
-		
-		timer.start();
-
-		clockPanel.add(clockLabel);
-		panel_1.add(clockPanel);
-
-		backBtn.addMouseListener(new MouseAdapter() {
-			@Override
-			public void mouseClicked(MouseEvent e) {
-				sideMenu.toggleMenuWithAnimation();
-//				sideMenu.toggleMenu(); use this if animation is not needed
-
-			}
-		});
-		// scaling back icon BECAUSE AYAW KONG MAG EDIT
-		ImageIcon backIcon = new ImageIcon(getClass().getResource("/images/back.png"));
-		Image scaledImage = backIcon.getImage().getScaledInstance(30, 30, Image.SCALE_SMOOTH); // w, h, scale the image
-		backIcon = new ImageIcon(scaledImage);
-		backBtn.setIcon(backIcon); // Set the resized icon to the button
-
-		JLabel homeBtn = new JLabel();
-
-		sidePanel.add(homeBtn, "cell 0 1,alignx left,aligny top");
-		homeBtn.addMouseListener(new MouseAdapter() {
-			@Override
-			public void mouseClicked(MouseEvent e) {
-				System.out.println("home");
-				contentPane.remove(1); // Remove the current main panel
-				JPanel home = homePanel();
-				contentPane.add(home, BorderLayout.CENTER);
-				contentPane.revalidate();
-				contentPane.repaint();
-			}
-		});
-
-		homeBtn.setIcon(new ImageIcon(getClass().getResource("/images/home.png")));
-
-		JLabel lblNewLabel = new JLabel("Home");
-		lblNewLabel.setHorizontalAlignment(SwingConstants.CENTER);
-		sidePanel.add(lblNewLabel, "cell 1 1 2 1,alignx center");
-
-		JLabel documentBtn = new JLabel();
-
-		sidePanel.add(documentBtn, "cell 0 2,alignx left,aligny top");
-
-		documentBtn.addMouseListener(new MouseAdapter() {
-			@Override
-			public void mouseClicked(MouseEvent e) {
-				JPanel documentPanel = new JPanel();
-				JLabel documentLabel = new JLabel("welcomePanel");
-				documentLabel.setHorizontalAlignment(SwingConstants.CENTER);
-				documentPanel.add(documentLabel);
-				contentPane.remove(1); // Remove the current main panel
-				JPanel document = documentPanel();
-				contentPane.add(document, BorderLayout.CENTER);
-				contentPane.revalidate();
-				contentPane.repaint();
-			}
-		});
-		documentBtn.setIcon(new ImageIcon(getClass().getResource("/images/document.png")));
-	}
-
-	private JPanel documentPanel() {
+	private static JPanel documentPanel() {
 		JPanel panel = new JPanel();
 		panel.setBackground(Color.BLUE);
 		JLabel welcomeLabel = new JLabel("Document's Panel");
@@ -201,7 +194,7 @@ public class testingUI extends JFrame {
 		return panel;
 	}
 
-	private JPanel homePanel() {
+	private static JPanel homePanel() {
 		JPanel panel = new JPanel();
 		panel.setBackground(Color.GREEN);
 		JLabel welcomeLabel = new JLabel("Home Panel");

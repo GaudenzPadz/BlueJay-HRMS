@@ -39,7 +39,7 @@ public class LIST {
 	public JScrollPane scrollPane;
 	public JPanel searchPanel;
 
-	private static JTable table;
+	public static JTable table;
 	private static JPopupMenu popupMenu;
 	private static JMenuItem menuItemRemove;
 	public final Map<String, String> workTypeMap = new HashMap<>();
@@ -125,6 +125,7 @@ public class LIST {
 				// I DONT KNOW THE USE OF THIS ONE
 			}
 		});
+		searchPanel.setLayout(new FlowLayout(FlowLayout.CENTER, 5, 5));
 		searchPanel.add(new JLabel("Search: "));
 		searchPanel.add(searchField);
 

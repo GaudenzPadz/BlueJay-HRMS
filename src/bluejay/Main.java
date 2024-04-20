@@ -6,7 +6,7 @@ import javax.swing.JOptionPane;
 import javax.swing.UIManager;
 import javax.swing.UnsupportedLookAndFeelException;
 
-import com.formdev.flatlaf.FlatLightLaf;
+import com.formdev.flatlaf.FlatDarkLaf;
 
 import bluejayDB.EmployeeDatabase;
 
@@ -31,21 +31,19 @@ public class Main {
 		try {
 			// try if database is connected
 			EmployeeDatabase database = new EmployeeDatabase();
-			try {
-				UIManager.setLookAndFeel(new FlatLightLaf());
-			} catch (UnsupportedLookAndFeelException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
+			/*
+			 * try { UIManager.setLookAndFeel(new FlatDarkLaf()); } catch
+			 * (UnsupportedLookAndFeelException e) { // TODO Auto-generated catch block
+			 * e.printStackTrace(); }
+			 */
 
-			
 			// Create login frame and GUI
 			loginFrame = new LOGIN();
 			loginFrame.componentsPanel.setOpaque(false);
 			loginFrame.welcomePanel.setOpaque(false);
 
 			loginGUI = new GUI("Login", loginFrame, 400, 650, false, true);
-	
+
 		} catch (SQLException | ClassNotFoundException e) {
 			e.printStackTrace();
 			JOptionPane.showMessageDialog(null, "Failed to connect to the database." + e.getMessage(), "Error",

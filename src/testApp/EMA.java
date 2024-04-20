@@ -26,6 +26,7 @@ import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.JTextField;
 import javax.swing.SwingUtilities;
+import javax.swing.SwingWorker;
 import javax.swing.UIManager;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
@@ -35,6 +36,8 @@ import bluejay.Employee;
 import bluejayDB.EmployeeDatabase;
 
 public class EMA extends JFrame {
+
+	private static final long serialVersionUID = 213;
 	private JTable table;
 	private DefaultTableModel tableModel;
 	private EmployeeDatabase db;
@@ -69,9 +72,7 @@ public class EMA extends JFrame {
 		// Create table model and table
 		tableModel = new DefaultTableModel();
 		table = new JTable(tableModel);
-		JPanel spPanel = new JPanel();
 		JScrollPane scrollPane = new JScrollPane(table);
-		spPanel.add(scrollPane);
 
 		JPanel payrollPanel = new JPanel();
 
@@ -133,6 +134,10 @@ public class EMA extends JFrame {
 			}
 		});
 
+		// Call this method when the application starts or when relevant information
+		// changes
+//		updatePayrollForAllEmployees();
+
 		payrollPanel.add(highlightEmployeesByFirstName);
 
 		payrollPanel.add(inputPanel, BorderLayout.NORTH);
@@ -152,7 +157,7 @@ public class EMA extends JFrame {
 		printTableData();
 
 		// Add components to the frame
-		getContentPane().add(spPanel, BorderLayout.CENTER);
+		getContentPane().add(scrollPane, BorderLayout.CENTER);
 		getContentPane().add(createPanel(), BorderLayout.EAST);
 		getContentPane().add(payrollPanel, BorderLayout.SOUTH);
 
@@ -339,38 +344,6 @@ public class EMA extends JFrame {
 		resultSet.close();
 	}
 
-	private void saveChanges() {
-		tableModel.addTableModelListener(e -> {
-			int row = e.getFirstRow();
-			int column = e.getColumn();
-			if (row != -1 && column != -1) {
-				Object updatedValue = tableModel.getValueAt(row, column);
-				// Validate updatedValue here
-				if (isValid(updatedValue, column)) {
-					// Show confirmation dialog
-					int choice = JOptionPane.showConfirmDialog(null, "Do you want to save the changes?",
-							"Confirm Changes", JOptionPane.YES_NO_OPTION);
-					if (choice == JOptionPane.YES_OPTION) {
-						// User confirmed changes, proceed with saving
-						int id = (int) tableModel.getValueAt(row, 0);
-						String columnName = tableModel.getColumnName(column);
-						db.updateData(id, columnName, updatedValue); // This line updates the database
-					} else {
-						// User canceled changes, rollback or ignore
-						// You can handle this case if necessary
-					}
-				} else {
-					JOptionPane.showMessageDialog(null, "Invalid data entered.", "Error", JOptionPane.ERROR_MESSAGE);
-					try {
-						refreshTable(); // Refresh the table to discard invalid changes
-					} catch (SQLException e1) {
-						e1.printStackTrace();
-					}
-				}
-			}
-		});
-	}
-
 	public boolean isValid(Object value, int columnIndex) {
 		if (value == null) {
 			return false; // Null values are not valid
@@ -501,6 +474,73 @@ public class EMA extends JFrame {
 		}
 	}
 
+	private void saveChanges() {
+		tableModel.addTableModelListener(e -> {
+			int row = e.getFirstRow();
+			int column = e.getColumn();
+			if (row != -1 && column != -1) {
+				Object updatedValue = tableModel.getValueAt(row, column);
+				// Validate updatedValue here
+				if (isValid(updatedValue, column)) {
+					// Show confirmation dialog
+					int choice = JOptionPane.showConfirmDialog(null, "Do you want to save the changes?",
+							"Confirm Changes", JOptionPane.YES_NO_OPTION);
+					if (choice == JOptionPane.YES_OPTION) {
+						// User confirmed changes, proceed with saving
+						int id = (int) tableModel.getValueAt(row, 0);
+						String columnName = tableModel.getColumnName(column);
+						db.updateData(id, columnName, updatedValue); // This line updates the database
+
+						// Update payroll information if rate or attendance is changed
+						if (columnName.equals("rate") || columnName.equals("attendance")) {
+							updatePayrollForEmployee(id);
+						}
+					} else {
+						// User canceled changes, rollback or ignore
+						// You can handle this case if necessary
+					}
+				} else {
+					JOptionPane.showMessageDialog(null, "Invalid data entered.", "Error", JOptionPane.ERROR_MESSAGE);
+					try {
+						refreshTable(); // Refresh the table to discard invalid changes
+					} catch (SQLException e1) {
+						e1.printStackTrace();
+					}
+				}
+			}
+		});
+	}
+
+	private void updatePayrollForEmployee(int employeeId) {
+		try {
+			// Retrieve employee data from the database
+			ResultSet employeeData = (ResultSet) db.getEmployeeById(employeeId);
+			if (employeeData.next()) {
+				double rate = employeeData.getDouble("rate");
+				double attendance = employeeData.getDouble("attendance");
+				double sss = employeeData.getDouble("sss");
+				double pagibig = employeeData.getDouble("pag_ibig");
+				double philhealth = employeeData.getDouble("philhealth");
+
+				// Calculate payroll information
+				Employee emp = new Employee();
+				emp.setRate(rate);
+				emp.setDaysWorked(attendance);
+				emp.setSSS(sss);
+				emp.setPAG_IBIG(pagibig);
+				emp.setPHILHEALTH(philhealth);
+				double gross = emp.calculateGrossPay(attendance, rate);
+				double totalDeduc = emp.totalDeductions(philhealth, pagibig, sss);
+				double net = emp.calculateNetPay(gross, totalDeduc);
+
+				// Update the payroll information in the database
+				db.updatePayrollInformation(employeeId, gross, totalDeduc, net);
+			}
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+	}
+
 	private boolean validateInputs() {
 		boolean valid = true;
 		for (JTextField textField : fieldMap.keySet()) {
@@ -536,4 +576,56 @@ public class EMA extends JFrame {
 	public static void main(String[] args) {
 		SwingUtilities.invokeLater(EMA::new);
 	}
+
+	public void reloadData(EmployeeDatabase db) {
+		SwingWorker<Void, Void> worker = new SwingWorker<Void, Void>() {
+			@Override
+			protected Void doInBackground() throws Exception {
+				try {
+					model.setRowCount(0); // Clear existing data in the table model
+					ResultSet rs = db.getAllData(); // Fetch all employee data
+					int rowCount = 0;
+					while (rs.next()) {
+						// Add fetched data to the table model
+						model.addRow(new Object[] { rs.getInt("id"), rs.getString("first_name"),
+								rs.getString("last_name"), rs.getString("address"),
+								workTypeMap.getOrDefault(rs.getString("work_type"), "Unknown"), rs.getDouble("rate"),
+								0.0, // Placehold er for Gross Pay, calculate as needed
+								0.0 // Placeholder for Net Pay, calculate as needed
+						});
+						rowCount++;
+						setProgress((int) ((double) rowCount / getTotalRowCount() * 100)); // Update progress
+					}
+					db.closeConnection(); // Close the database connection
+				} catch (SQLException e) {
+					// Handle database related exceptions
+					JOptionPane.showMessageDialog(null, "Error fetching data from database: " + e.getMessage(),
+							"Database Error", JOptionPane.ERROR_MESSAGE);
+				} catch (Exception e) {
+					// Handle other exceptions
+					JOptionPane.showMessageDialog(null, "An error occurred: " + e.getMessage(), "Error",
+							JOptionPane.ERROR_MESSAGE);
+					System.out.println(e.getMessage());
+				}
+				return null;
+			}
+
+			// Method to get total row count from database (if needed)
+			private int getTotalRowCount() throws SQLException {
+				ResultSet rs = db.getAllData();
+				int count = 0;
+				while (rs.next()) {
+					count++;
+				}
+				return count;
+			}
+
+			@Override
+			protected void done() {
+				// Update UI or perform any post-processing tasks if needed
+			}
+		};
+		worker.execute();
+	}
+
 }
