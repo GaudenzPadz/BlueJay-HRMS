@@ -15,6 +15,7 @@ import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
 
 import bluejayV2.ButtonPanel;
+import bluejayV2.Main;
 import net.miginfocom.swing.MigLayout;
 import javax.swing.Icon;
 
@@ -74,7 +75,7 @@ public class EmployeePanel extends JPanel {
         panel_2.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
-                System.out.println("Button 1 clicked!");
+            	Main.frame.replaceContentPane(new ProfilePanel(), getLayout());
             }
         });
         menuPanel.add(panel_2, "cell 1 1,growx,aligny center");

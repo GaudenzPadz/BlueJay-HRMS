@@ -9,7 +9,6 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 
 import com.formdev.flatlaf.FlatClientProperties;
-import com.formdev.flatlaf.fonts.roboto.FlatRobotoFont;
 
 import net.miginfocom.swing.MigLayout;
 import javax.swing.SwingConstants;
@@ -40,7 +39,7 @@ public class Dashboard extends JPanel {
 		panel_1.add(iconBtn, "cell 0 0 4 1,growx,aligny center");
 
 		JLabel lblNewLabel = new JLabel("Employee Summary");
-		lblNewLabel.setFont(new Font(FlatRobotoFont.FAMILY, Font.BOLD, 14));
+		lblNewLabel.setFont(new Font("SansSerif", Font.BOLD, 15));
 
 		panel_1.add(lblNewLabel, "cell 3 1,alignx left");
 

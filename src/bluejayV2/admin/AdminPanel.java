@@ -44,6 +44,7 @@ public class AdminPanel extends JPanel {
 
 		mainPanel.setLayout(new BorderLayout(0, 0));
 		mainPanel.add(new HomePanel());
+		
 
 		sidePanel = SidePanel();
 		add(sidePanel, BorderLayout.WEST);
@@ -106,6 +107,7 @@ public class AdminPanel extends JPanel {
 			public void actionPerformed(ActionEvent e) {
 				// goes to back to home
 				mainPanel.removeAll();
+				mainPanel.setLayout(new BorderLayout());
 				mainPanel.add(new HomePanel());
 				mainPanel.revalidate();
 				mainPanel.repaint();
@@ -126,6 +128,7 @@ public class AdminPanel extends JPanel {
 			public void actionPerformed(ActionEvent e) {
 				// Show Panel 1
 				mainPanel.removeAll();
+				mainPanel.setLayout(new BorderLayout());
 				mainPanel.add(new EMPListPanel(), BorderLayout.CENTER);
 				mainPanel.revalidate();
 				mainPanel.repaint();
@@ -145,7 +148,11 @@ public class AdminPanel extends JPanel {
 			public void actionPerformed(ActionEvent e) {
 				// Show Panel 2
 				mainPanel.removeAll();
-				mainPanel.add(new AddEmpPanel());
+				mainPanel.setLayout(new MigLayout("", "[grow]", "[grow][grow,center]"));
+				JLabel titleLabel = new JLabel("Add Employee");
+				titleLabel.setFont(new Font("SansSerif", Font.BOLD, 20));
+				mainPanel.add(titleLabel, "cell 0 0,alignx leading,aligny center");
+				mainPanel.add(new AddEMPPanel(), "cell 0 1,grow");
 				mainPanel.revalidate();
 				mainPanel.repaint();
 			}
@@ -164,6 +171,7 @@ public class AdminPanel extends JPanel {
 			public void actionPerformed(ActionEvent e) {
 				// Show Panel 3
 				mainPanel.removeAll();
+				mainPanel.setLayout(new BorderLayout());
 				mainPanel.add(new JLabel("Panel 3 content"));
 				mainPanel.revalidate();
 				mainPanel.repaint();

@@ -190,7 +190,7 @@ public class LIST {
 			int confirm = JOptionPane.showConfirmDialog(null, "Are you sure you want to delete this employee?",
 					"Confirm Deletion", JOptionPane.YES_NO_OPTION);
 			if (confirm == JOptionPane.YES_OPTION) {
-				db.deleteData(employeeId);
+				db.deleteEmployeeData(employeeId);
 				JOptionPane.showMessageDialog(null, "Employee deleted successfully.", "Success",
 						JOptionPane.INFORMATION_MESSAGE);
 				// Refresh table to reflect changes
@@ -270,7 +270,7 @@ public class LIST {
 			return;
 		}
 
-		db.insertData(firstName, lastName, address, workType, gender);
+		//db.insertData(firstName, lastName, address, workType, gender);
 		JOptionPane.showMessageDialog(null, "Employee added successfully.", "Success", JOptionPane.INFORMATION_MESSAGE);
 		refreshTable();
 	}
@@ -296,7 +296,7 @@ public class LIST {
 		String idString = JOptionPane.showInputDialog("Enter the ID of the record to delete:");
 		if (idString != null && !idString.isEmpty()) {
 			int id = Integer.parseInt(idString);
-			db.deleteData(id);
+			db.deleteEmployeeData(id);
 			reloadData(db);
 		}
 	}
@@ -307,7 +307,7 @@ public class LIST {
 
 	private void populateComboBox() {
 		try {
-			ResultSet rs = db.getTypes(); // This line is likely causing the NullPointerException
+			ResultSet rs = db.getTypes(); 
 			while (rs.next()) {
 				comboBoxWorkType.addItem(rs.getString("work_type"));
 			}

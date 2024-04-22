@@ -6,7 +6,6 @@ import java.awt.Font;
 import java.awt.Image;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.sql.Date;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.HashMap;
@@ -36,6 +35,8 @@ import com.formdev.flatlaf.extras.FlatAnimatedLafChange;
 
 import bluejay.Employee;
 import bluejayDB.EmployeeDatabase;
+import net.miginfocom.swing.MigLayout;
+import java.awt.Color;
 
 public class EMPListPanel extends JPanel {
 
@@ -67,6 +68,8 @@ public class EMPListPanel extends JPanel {
 	private JPanel panel;
 	private JButton editBtn;
 	private JButton saveBtn;
+	private JLabel lblNewLabel;
+	private JLabel errorLabel;
 
 	public EMPListPanel() {
 		try {
@@ -146,15 +149,19 @@ public class EMPListPanel extends JPanel {
 				// I DONT KNOW THE USE OF THIS ONE
 			}
 		});
-		searchPanel.setLayout(new FlowLayout(FlowLayout.CENTER, 5, 5));
-		searchPanel.add(new JLabel("Search: "));
-		searchPanel.add(searchField);
+		searchPanel.setLayout(new MigLayout("", "[230.00px][40px][120.00px]", "[20px]"));
+		
+		errorLabel = new JLabel("Error Label");
+		errorLabel.setForeground(Color.RED);
+		searchPanel.add(errorLabel, "cell 0 0,alignx left,aligny center");
+		searchPanel.add(new JLabel("Search: "), "cell 1 0,alignx left,aligny center");
+		searchPanel.add(searchField, "cell 2 0,growx,aligny top");
 
 		JScrollPane scrollPane = new JScrollPane(table);
 		setLayout(new BorderLayout(10, 5));
 		add(searchPanel, BorderLayout.NORTH);
 		add(scrollPane, BorderLayout.CENTER);
-
+		
 		panel = new JPanel();
 		FlowLayout flowLayout = (FlowLayout) panel.getLayout();
 		flowLayout.setAlignment(FlowLayout.RIGHT);

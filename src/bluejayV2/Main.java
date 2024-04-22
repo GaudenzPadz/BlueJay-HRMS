@@ -19,18 +19,14 @@ public class Main {
 
 	public static void main(String[] a) {
 		FlatLightLaf.setup();
-		FlatRobotoFont.install();
 		UIManager.put("Button.arc", 999);
-		UIManager.put("Component.arc", 50);
-		UIManager.put("ProgressBar.arc", 999);
 		UIManager.put("TextComponent.arc", 50);
-		UIManager.put("defaultFont", new Font(FlatRobotoFont.FAMILY, Font.PLAIN, 13));
+		UIManager.put("defaultFont", new Font("SansSerif", Font.PLAIN, 13));
 
 		try {
 			DB = new EmployeeDatabase();
 
 			frame = new GUI("Title", new LoginPanel(), 1200, 700, true, true);
-
 			frame.isDark(false);
 
 		} catch (SQLException | ClassNotFoundException e) {

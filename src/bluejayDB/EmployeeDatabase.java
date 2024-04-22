@@ -76,10 +76,11 @@ public class EmployeeDatabase {
 
 	}
 
-	public void insertData(String first_name, String last_name, String address, String workType, String gender) {
+	public void insertEMPData(String first_name, String last_name, String address, String workType, String gender,
+			String telNum, Date DOB, String email) {
 		try {
 			// Insert the new employee with the new ID
-			String sql = "INSERT INTO employees (id, first_name, last_name, address, work_type, gender) VALUES (?, ?, ?, ?, ?,?)";
+			String sql = "INSERT INTO employees (id, first_name, last_name, address, work_type, gender, tel_number, DOB, email) VALUES (?, ?, ?, ?, ?,?,?,?,?)";
 			PreparedStatement statement = connection.prepareStatement(sql);
 			// Increment the last ID to get the new ID
 			int newId = getLastEmployeeId() + 1;
@@ -89,11 +90,31 @@ public class EmployeeDatabase {
 			statement.setString(4, address);
 			statement.setString(5, workType);
 			statement.setString(6, gender);
+			statement.setString(7, telNum);
+			statement.setDate(8, DOB);
+			statement.setString(9, email);
+
 			statement.executeUpdate();
 			System.out.println("Record created.");
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}
+	}
+
+	public void insertEMPCredentials(String name, String username, String passw) {
+		try {
+			PreparedStatement statement = connection
+					.prepareStatement("INSERT INTO users (name, username, password) VALUES (?,?,?)");
+			statement.setString(1, name);
+			statement.setString(2, username);
+			statement.setString(3, passw);
+			
+			statement.executeUpdate();
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+
 	}
 
 	// Helper method to get the last employee ID
