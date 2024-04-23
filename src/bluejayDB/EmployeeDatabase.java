@@ -25,9 +25,11 @@ public class EmployeeDatabase {
 		Class.forName("org.sqlite.JDBC");
 		connection = DriverManager.getConnection("jdbc:sqlite::resource:DB/bluejayDB.sqlite");
 		if (connection == null) {
+
 			JOptionPane.showMessageDialog(null, "Failed to connect to Database", "Error", JOptionPane.ERROR_MESSAGE);
 			throw new SQLException("Failed to establish connection to the database.");
 		}
+
 	}
 
 	public Connection getConnection() {
@@ -36,7 +38,7 @@ public class EmployeeDatabase {
 
 	public String validateLogin(String username, String password) {
 		try {
-			String sql = "SELECT name FROM users WHERE username = ? AND password = ?";
+			String sql = "SELECT name, role FROM users WHERE username = ? AND password = ?";
 			PreparedStatement statement = connection.prepareStatement(sql);
 			statement.setString(1, username);
 			statement.setString(2, password);
@@ -44,14 +46,53 @@ public class EmployeeDatabase {
 
 			if (rs.next()) {
 				String name = rs.getString("name");
-				return "Login successful! Welcome " + name;
+				String role = rs.getString("role");
+				return "Login successful! Welcome " + name + " (Role: " + role + ")";
 			} else {
 				return "Invalid username or password.";
 			}
 
 		} catch (SQLException e) {
 			e.printStackTrace();
-			return "Cant connect"; // replace with better idk
+			return "Database error during login.";
+		}
+	}
+
+	public Employee getEmployeeDataByUsername(String username) {
+		try {
+			String sql = "SELECT * FROM employees WHERE email = (SELECT email FROM users WHERE username = ?)";
+			PreparedStatement statement = connection.prepareStatement(sql);
+			statement.setString(1, username);
+			ResultSet rs = statement.executeQuery();
+
+			if (rs.next()) {
+				Employee employee = new Employee();
+				employee.setId(rs.getInt("id"));
+				employee.setFirstName(rs.getString("first_name"));
+				employee.setMiddleName(rs.getString("middle_name"));
+				employee.setLastName(rs.getString("last_name"));
+				employee.setAddress(rs.getString("address"));
+				employee.setWorkType(rs.getString("work_type"));
+				employee.setRate(rs.getInt("rate"));
+				employee.setGender(rs.getString("gender"));
+				employee.setTelNUmber(rs.getString("tel_number"));
+				employee.setEmail(rs.getString("email"));
+				employee.setDateHired(rs.getDate("date_hired"));
+				employee.setDOB(rs.getDate("DOB"));
+				
+				byte[] imageData = rs.getBytes("profile_image");
+		        if (imageData != null) {
+		            employee.setProfileImage(imageData);
+		        }
+		        
+				return employee;
+			} else {
+				return null; // No employee data found for this username
+			}
+
+		} catch (SQLException e) {
+			e.printStackTrace();
+			return null; // Handle SQL error
 		}
 	}
 
@@ -77,10 +118,10 @@ public class EmployeeDatabase {
 	}
 
 	public void insertEMPData(String first_name, String last_name, String address, String workType, String gender,
-			String telNum, Date DOB, String email) {
+			String telNum, Date DOB, String email, byte[] imageData) {
 		try {
 			// Insert the new employee with the new ID
-			String sql = "INSERT INTO employees (id, first_name, last_name, address, work_type, gender, tel_number, DOB, email) VALUES (?, ?, ?, ?, ?,?,?,?,?)";
+			String sql = "INSERT INTO employees (id, first_name, last_name, address, work_type, gender, tel_number, DOB, email, profile_image) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 			PreparedStatement statement = connection.prepareStatement(sql);
 			// Increment the last ID to get the new ID
 			int newId = getLastEmployeeId() + 1;
@@ -93,6 +134,7 @@ public class EmployeeDatabase {
 			statement.setString(7, telNum);
 			statement.setDate(8, DOB);
 			statement.setString(9, email);
+			statement.setBytes(10, imageData);
 
 			statement.executeUpdate();
 			System.out.println("Record created.");
@@ -101,13 +143,14 @@ public class EmployeeDatabase {
 		}
 	}
 
-	public void insertEMPCredentials(String name, String username, String passw) {
+	public void insertEMPCredentials(String name, String username, String passw, String role) {
 		try {
 			PreparedStatement statement = connection
-					.prepareStatement("INSERT INTO users (name, username, password) VALUES (?,?,?)");
+					.prepareStatement("INSERT INTO users (name, username, password, role) VALUES (?,?,?,?)");
 			statement.setString(1, name);
 			statement.setString(2, username);
 			statement.setString(3, passw);
+			statement.setString(4, role);
 			
 			statement.executeUpdate();
 		} catch (SQLException e) {
@@ -118,7 +161,7 @@ public class EmployeeDatabase {
 	}
 
 	// Helper method to get the last employee ID
-	private int getLastEmployeeId() throws SQLException {
+	public int getLastEmployeeId() throws SQLException {
 		int lastId = 0;
 		PreparedStatement lastIdStatement = connection.prepareStatement("SELECT MAX(id) FROM employees");
 		ResultSet rs = lastIdStatement.executeQuery();

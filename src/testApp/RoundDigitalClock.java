@@ -1,10 +1,37 @@
 package testApp;
 
-import java.awt.event.*;
-import java.text.*;
-import java.util.*;
-import javax.swing.*;
-import java.awt.*;
+import java.awt.BorderLayout;
+import java.awt.Color;
+import java.awt.Dimension;
+import java.awt.EventQueue;
+import java.awt.FlowLayout;
+import java.awt.Graphics;
+import java.awt.Graphics2D;
+import java.awt.GridLayout;
+import java.awt.RenderingHints;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.sql.Time;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.Properties;
+
+import javax.swing.JButton;
+import javax.swing.JFormattedTextField.AbstractFormatter;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.JSpinner;
+import javax.swing.SpinnerDateModel;
+import javax.swing.Timer;
+import javax.swing.border.EmptyBorder;
+
+import org.jdatepicker.impl.JDatePanelImpl;
+import org.jdatepicker.impl.JDatePickerImpl;
+import org.jdatepicker.impl.UtilDateModel;
 
 public class RoundDigitalClock extends JFrame {
 
@@ -14,7 +41,7 @@ public class RoundDigitalClock extends JFrame {
 
 	public RoundDigitalClock() {
 		super("Round Digital Clock");
-		setSize(300, 300);
+		setSize(1000, 1000);
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
 		clockPanel = new DialPanel();
@@ -29,7 +56,7 @@ public class RoundDigitalClock extends JFrame {
 
 		JLabel secondsLabel = new JLabel("00");
 
-		javax.swing.Timer timer = new javax.swing.Timer(1000, new ActionListener() {
+		Timer timer = new Timer(1000, new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				hoursLabel.setText(new SimpleDateFormat("HH: ").format(Calendar.getInstance().getTime()));
@@ -47,11 +74,114 @@ public class RoundDigitalClock extends JFrame {
 		digitalClockPanel.add(secondsLabel);
 
 		getContentPane().add(clockPanel);
-		
+
 		JPanel panel = new JPanel();
 		getContentPane().add(panel);
 		getContentPane().add(digitalClockPanel);
 		getContentPane().setLayout(new FlowLayout(FlowLayout.CENTER, 5, 5));
+
+		JPanel inputPanel = new JPanel(new GridLayout(4, 2, 5, 5));
+		inputPanel.setBorder(new EmptyBorder(10, 10, 10, 10));
+
+		JLabel timeInLabel = new JLabel("Time In:");
+		inputPanel.add(timeInLabel);
+
+		// Create the SpinnerDateModel for timeInSpinner
+		SpinnerDateModel timeInSpinnerModel = new SpinnerDateModel();
+		timeInSpinnerModel.setCalendarField(Calendar.MINUTE); // Set to minute precision
+
+		JSpinner timeInSpinner = new JSpinner(timeInSpinnerModel);
+		JSpinner.DateEditor timeInEditor = new JSpinner.DateEditor(timeInSpinner, "hh:mm a");
+		timeInSpinner.setEditor(timeInEditor);
+		inputPanel.add(timeInSpinner);
+
+		JLabel timeOutLabel = new JLabel("Time Out:");
+		inputPanel.add(timeOutLabel);
+
+		// Create a separate SpinnerDateModel for timeOutSpinner
+		SpinnerDateModel timeOutSpinnerModel = new SpinnerDateModel();
+		timeOutSpinnerModel.setCalendarField(Calendar.MINUTE); // Set to minute precision
+
+		JSpinner timeOutSpinner = new JSpinner(timeOutSpinnerModel);
+		JSpinner.DateEditor timeOutEditor = new JSpinner.DateEditor(timeOutSpinner, "hh:mm a");
+		timeOutSpinner.setEditor(timeOutEditor);
+		inputPanel.add(timeOutSpinner);
+
+		JLabel overtimeLabel = new JLabel("Overtime (how many hours?) :");
+		inputPanel.add(overtimeLabel);
+
+		JSpinner overtime = new JSpinner();
+		inputPanel.add(overtime);
+
+		JButton addAttendanceButton = new JButton("Add Attendance");
+		
+		UtilDateModel model = new UtilDateModel();
+		Properties p = new Properties();
+		p.put("text.year", "Year");
+		p.put("text.month", "Month");
+		p.put("text.today", "Today");
+		JDatePanelImpl datePanel = new JDatePanelImpl(model, p);
+		AbstractFormatter DateLabelFormatter = new AbstractFormatter(){
+			
+			private static final long serialVersionUID = -3517374967067627101L;
+			private String datePattern = "yyyy-MM-dd";
+		    private SimpleDateFormat dateFormatter = new SimpleDateFormat(datePattern);
+
+		    @Override
+		    public Object stringToValue(String text) throws ParseException {
+		        return dateFormatter.parseObject(text);
+		    }
+
+		    @Override
+		    public String valueToString(Object value) throws ParseException {
+		        if (value != null) {
+		            Calendar cal = (Calendar) value;
+		            return dateFormatter.format(cal.getTime());
+		        }
+
+		        return "";
+		    }
+
+		};
+		JDatePickerImpl datePicker = new JDatePickerImpl(datePanel, DateLabelFormatter);
+		model.setSelected(true);
+		
+//		UtilCalendarModel model = new UtilCalendarModel();
+//		SqlDateModel model = new SqlDateModel();
+				
+//		datePicker = new JDatePickerImpl(datePanel);
+		//datePicker = new JDatePickerImpl(datePanel, new DateLabelFormatter());
+		
+		addAttendanceButton.addActionListener(e -> {
+			// Retrieve data from input fields
+			Calendar calendar = Calendar.getInstance();
+			Date date = calendar.getTime();
+
+			// Convert util Date to sql Date
+			java.sql.Date sqlDate = new java.sql.Date(date.getTime());
+
+			// Get time from Spinner
+			Date timeInDate = (Date) timeInSpinner.getValue();
+			Time timeIn = new Time(timeInDate.getTime());
+
+			Date timeOutDate = (Date) timeOutSpinner.getValue();
+			Time timeOut = new Time(timeOutDate.getTime());
+
+			int overtimeValue = (int) overtime.getValue();
+
+			// Call method to insert attendance data into database
+		//	employeeDb.insertAttendanceData(firstNameField.getText(), sqlDate, timeIn, timeOut, overtimeValue);
+			// Read attendance data and update the table model
+		//	employeeDb.readAttendanceData((DefaultTableModel) attendanceTable.getModel());
+			
+			Date selectedDate = (Date) datePicker.getModel().getValue();
+			JOptionPane.showMessageDialog(this, "The selected date is " + selectedDate);
+
+		});
+		inputPanel.add(datePicker);
+		inputPanel.add(addAttendanceButton);
+
+		add(inputPanel, BorderLayout.SOUTH);
 
 	}
 
@@ -60,8 +190,8 @@ public class RoundDigitalClock extends JFrame {
 		public void paintComponent(Graphics g) {
 			super.paintComponent(g);
 			Graphics2D g2d = (Graphics2D) g;
-		    g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-			
+			g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+
 			// Draw the clock dial (circle, tick marks)
 			int centerX = getWidth() / 2;
 			int centerY = getHeight() / 2;
@@ -94,7 +224,8 @@ public class RoundDigitalClock extends JFrame {
 			int hourHandY = centerY - (int) (hourHandLength * Math.cos(hourAngle));
 			int minuteHandX = centerX + (int) (minuteHandLength * Math.sin(minuteAngle));
 			int minuteHandY = centerY - (int) (minuteHandLength * Math.cos(minuteAngle));
-			int secondHandX = centerX + (int) (secondHandLength * Math.sin(secondAngle)); // Calculate position for seconds
+			int secondHandX = centerX + (int) (secondHandLength * Math.sin(secondAngle)); // Calculate position for
+																							// seconds
 			int secondHandY = centerY - (int) (secondHandLength * Math.cos(secondAngle));
 
 			// Draw hands
@@ -114,3 +245,4 @@ public class RoundDigitalClock extends JFrame {
 		});
 	}
 }
+

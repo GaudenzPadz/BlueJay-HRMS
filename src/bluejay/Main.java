@@ -3,10 +3,6 @@ package bluejay;
 import java.sql.SQLException;
 
 import javax.swing.JOptionPane;
-import javax.swing.UIManager;
-import javax.swing.UnsupportedLookAndFeelException;
-
-import com.formdev.flatlaf.FlatDarkLaf;
 
 import bluejayDB.EmployeeDatabase;
 

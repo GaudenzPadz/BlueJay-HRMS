@@ -1,14 +1,15 @@
 package bluejayV2;
 
 import java.awt.Font;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 
 import javax.swing.JOptionPane;
 import javax.swing.UIManager;
 
 import com.formdev.flatlaf.FlatLightLaf;
-import com.formdev.flatlaf.fonts.roboto.FlatRobotoFont;
 
+import bluejay.Employee;
 import bluejayDB.EmployeeDatabase;
 
 public class Main {
@@ -16,7 +17,7 @@ public class Main {
 	public static GUI frame;
 
 	public static EmployeeDatabase DB;
-
+	public static Employee emp;
 	public static void main(String[] a) {
 		FlatLightLaf.setup();
 		UIManager.put("Button.arc", 999);

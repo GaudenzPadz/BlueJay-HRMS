@@ -2,6 +2,8 @@ package bluejay;
 
 import java.sql.Date;
 
+import javax.swing.ImageIcon;
+
 public class Employee {
 
 	private int id;
@@ -19,13 +21,14 @@ public class Employee {
 	private int dayOff;
 	private double daysWorked;
 	private double overtime;
-	private Date birthday;
+	private Date DOB;
 	private double SSS;
 	private double PAG_IBIG;
 	private double PHILHEALTH;
-	private int telNumber;
+	private String telNumber;
 	private String email;
 	private Date dateHired;
+	private ImageIcon profileImage;
 
 
 	public Employee() {
@@ -47,7 +50,7 @@ public class Employee {
 		this.gender = gender;
 		this.email = email;
 		this.middleName = middleName;
-		// this.birthday = birthday
+		// this.DOB = DOB
 		this.telNumber = telNumber;
 
 		this.absents = 0;
@@ -109,15 +112,15 @@ public class Employee {
 		return PHILHEALTH;
 	}
 
-	public Date getbirthday() {
-		return birthday;
+	public Date getDOB() {
+		return DOB;
 	}
 
 	public int getAbsents() {
 		return absents;
 	}
 
-	public int getTelNumber() {
+	public String getTelNumber() {
 		return telNumber;
 	}
 
@@ -194,8 +197,8 @@ public class Employee {
 		this.PHILHEALTH = PHILHEALTH;
 	}
 
-	public void setbirthday(Date birthday) {
-		this.birthday = birthday;
+	public void setDOB(Date DOB) {
+		this.DOB = DOB;
 	}
 
 	public void setAbsents(int absents) {
@@ -214,7 +217,7 @@ public class Employee {
 		this.overtime = overtime;
 	}
 
-	public void setTelNUmber(int telNumber) {
+	public void setTelNUmber(String telNumber) {
 		this.telNumber = telNumber;
 	}
 
@@ -233,6 +236,13 @@ public class Employee {
 	public void setDaysWorked(double daysWorked) {
 		this.daysWorked = daysWorked;
 	}
+	public ImageIcon getProfileImage() {
+        return profileImage;
+    }
+
+    public void setProfileImage(byte[] imageData) {
+        this.profileImage = new ImageIcon(imageData);
+    }
 
 	// METHODS TO CALCULATE
 

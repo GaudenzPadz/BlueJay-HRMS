@@ -2,7 +2,6 @@ package bluejayV2;
 
 import java.awt.BorderLayout;
 import java.awt.EventQueue;
-import java.awt.Font;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.sql.SQLException;
@@ -19,6 +18,7 @@ import javax.swing.SwingConstants;
 
 import com.formdev.flatlaf.FlatClientProperties;
 
+import bluejay.Employee;
 import bluejayDB.EmployeeDatabase;
 import bluejayV2.admin.AdminPanel;
 import bluejayV2.employee.EmployeePanel;
@@ -128,36 +128,43 @@ public class LoginPanel extends JPanel {
 	}
 
 	public void processLogin(String inputUsername, String inputPassword) {
-		try {
-			Main.DB = new EmployeeDatabase();
-		} catch (ClassNotFoundException | SQLException e) {
-			e.printStackTrace();
-			JOptionPane.showMessageDialog(null, "Database connection error!");
-			return;
-		}
+	    try {
+	        Main.DB = new EmployeeDatabase();
+	    } catch (ClassNotFoundException | SQLException e) {
+	        e.printStackTrace();
+	        JOptionPane.showMessageDialog(null, "Database connection error!");
+	        return;
+	    }
 
-		String username = inputUsername;
-		String password = inputPassword;
+	    String username = inputUsername;
+	    String password = inputPassword;
 
-		String loginResult = Main.DB.validateLogin(username, password);
-		System.out.println(loginResult);
-		if (loginResult.startsWith("Login successful!")) {
-			if (loginResult.contains("Welcome ADMIN")) {
-				Main.frame.replaceContentPane(new AdminPanel(), new BorderLayout());
+	    String loginResult = Main.DB.validateLogin(username, password);
+	    System.out.println(loginResult);
+	    if (loginResult.startsWith("Login successful!")) {
+	        if (loginResult.contains("ADMIN")) {
+	            Main.frame.replaceContentPane(new AdminPanel(), new BorderLayout());
 
-			} else if (loginResult.contains("Welcome")) {
-				Main.frame.replaceContentPane(new EmployeePanel(), new BorderLayout());
-			} else {
-				// Unexpected login result format
-				System.out.println("Unexpected login result format: " + loginResult);
-				JOptionPane.showMessageDialog(null, "Invalid username or password");
-			}
-		} else {
-			// Handle failed login
-			JOptionPane.showMessageDialog(null, "Invalid username or password");
-		}
+	        } else if (loginResult.contains("Employee")) {
+	            Employee employee = Main.DB.getEmployeeDataByUsername(username);
+	            if (employee != null) {
 
-		Main.DB.closeConnection();
+	                // Pass employee data to EmployeePanel
+	                Main.frame.replaceContentPane(new EmployeePanel(employee), new BorderLayout());
+	            } else {
+	                JOptionPane.showMessageDialog(null, "No employee data found for this user");
+	            }
+
+	        } else {
+	            System.out.println("Unexpected login result format: " + loginResult);
+	            JOptionPane.showMessageDialog(null, "Invalid username or password");
+	        }
+	    } else {
+	        // Handle failed login
+	        JOptionPane.showMessageDialog(null, "Invalid username or password");
+	    }
+
+	    Main.DB.closeConnection();
 	}
 
 }

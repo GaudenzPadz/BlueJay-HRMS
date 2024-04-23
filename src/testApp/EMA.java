@@ -1,195 +1,145 @@
 package testApp;
 
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.ResultSetMetaData;
-import java.sql.SQLException;
-
-import javax.swing.JFrame;
-import javax.swing.JOptionPane;
-import javax.swing.JScrollPane;
-import javax.swing.JTable;
-import javax.swing.SwingUtilities;
-import javax.swing.table.DefaultTableModel;
-
+import java.sql.*;
+import java.util.*;
+import javax.swing.*;
+import javax.swing.table.*;
 import net.miginfocom.swing.MigLayout;
 
-public class EMA extends JFrame {
+// Utility class for database connection and table retrieval
+class DatabaseUtil {
+	private static final String DB_URL = "jdbc:sqlite::resource:DB/bluejayDB.sqlite";
 
+	public static Connection connect() throws SQLException, ClassNotFoundException {
+		Class.forName("org.sqlite.JDBC");
+		return DriverManager.getConnection(DB_URL);
+	}
+
+	public static ResultSet getTableData(Connection connection, String tableName) throws SQLException {
+		if (connection == null) {
+			throw new SQLException("Connection is null. Establish a connection first.");
+		}
+
+		String query = "SELECT * FROM " + tableName; // No user input, so this is safe
+		PreparedStatement statement = connection.prepareStatement(query);
+		return statement.executeQuery();
+	}
+}
+
+public class EMA extends JFrame {
 	private static final long serialVersionUID = 213;
-	private JTable table1, table2, table3, table4;
-	private DefaultTableModel model1, model2, model3, model4;
-	private EmployeeDatabase db;
-	private JScrollPane sp1, sp2, sp3, sp4;
+	private Map<String, DefaultTableModel> tableModels;
+	private Connection connection;
 
 	public EMA() {
 		setTitle("Check SQL");
 		setSize(1014, 370);
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		getContentPane().setLayout(new MigLayout("", "[984px,grow]", "[461px][grow]"));
-		setVisible(true);
+		getContentPane().setLayout(new MigLayout("", "[984px,grow]", "[][461px][grow]"));
 
+		JButton reset = new JButton("Reset Tables");
+        reset.addActionListener(e -> resetTables());
+
+		getContentPane().add(reset, "flowx,cell 0 0");
+		this.setVisible(true);
+		// Initialize database connection
 		try {
-			db = new EmployeeDatabase();
+			connection = DatabaseUtil.connect();
 		} catch (SQLException | ClassNotFoundException e) {
-			JOptionPane.showMessageDialog(null, "Failed to connect to the database.", "Error",
+			JOptionPane.showMessageDialog(this, "Failed to connect to the database.", "Error",
 					JOptionPane.ERROR_MESSAGE);
 			e.printStackTrace(); // Log the exception
 		}
 
-		model1 = new DefaultTableModel();
+		// Map for storing table models for easier management
+		tableModels = new HashMap<>();
+		String[] tableNames = { "employees", "attendance", "users", "types" };
+		for (int i = 0; i < tableNames.length; i++) {
+			DefaultTableModel model = new DefaultTableModel();
+			tableModels.put(tableNames[i], model);
 
-		model2 = new DefaultTableModel();
-		table1 = new JTable(model1);
-		sp1 = new JScrollPane(table1);
-		getContentPane().add(sp1, "cell 0 0,grow");
-		table2 = new JTable(model2);
-		sp2 = new JScrollPane(table2);
-		getContentPane().add(sp2, "cell 0 1,grow");
+			JTable table = new JTable(model);
+			JScrollPane sp = new JScrollPane(table);
+			getContentPane().add(sp, "cell 0 " + i + ",grow");
 
-		model3 = new DefaultTableModel();
-		table3 = new JTable(model3);
-		sp3= new JScrollPane(table3);
-		getContentPane().add(sp3, "cell 0 2,grow");
-
-		model4 = new DefaultTableModel();
-		table4 = new JTable(model4);
-		sp4= new JScrollPane(table4);
-		getContentPane().add(sp4, "cell 0 3,grow");
-
-		try {
-			ResultSet resultSet = db.getEMP();
-			populateTable(resultSet,model1);
-			
-
-			ResultSet resultSet2 = db.getAttendance();
-			populateTable(resultSet2,model2);
-			
-			ResultSet resultSet3 = db.getTypes();
-			populateTable(resultSet3,model3);
-			
-			ResultSet resultSet4 = db.getUsers();
-			populateTable(resultSet4,model4);
-			
-		} catch (SQLException e) {
-			e.printStackTrace();
+			// Populate table with data from the database
+			try {
+				ResultSet resultSet = DatabaseUtil.getTableData(connection, tableNames[i]);
+				populateTable(resultSet, model);
+			} catch (SQLException e) {
+				e.printStackTrace(); // Log the exception
+			}
 		}
-
-
 	}
 
-	private void populateTable(ResultSet resultSet, DefaultTableModel model1) throws SQLException {
+	private void populateTable(ResultSet resultSet, DefaultTableModel model) throws SQLException {
 		ResultSetMetaData metaData = resultSet.getMetaData();
 
-		// Clear existing columns from table model
-		model1.setColumnCount(0);
+		// Clear existing columns from the table model
+		model.setColumnCount(0);
 
-		// Add columns to table model
+		// Add columns to the table model
 		int columnCount = metaData.getColumnCount();
 		for (int columnIndex = 1; columnIndex <= columnCount; columnIndex++) {
-			model1.addColumn(metaData.getColumnName(columnIndex));
+			model.addColumn(metaData.getColumnName(columnIndex));
 		}
 
-		// Add rows to table model
+		// Add rows to the table model
 		while (resultSet.next()) {
 			Object[] rowData = new Object[columnCount];
 			for (int i = 0; i < columnCount; i++) {
 				rowData[i] = resultSet.getObject(i + 1);
 			}
-			model1.addRow(rowData);
+			model.addRow(rowData);
 		}
 
 		resultSet.close();
 	}
 
+	private void resetTables() {
+		// Confirm the reset action with the user
+		int confirm = JOptionPane.showConfirmDialog(this,
+				"Are you sure you want to reset all data in the database? This action cannot be undone.",
+				"Confirm Reset", JOptionPane.YES_NO_OPTION);
+
+		if (confirm == JOptionPane.YES_OPTION) {
+			String[] tableNames = { "employees", "attendance", "users", "types" };
+			try {
+				for (String tableName : tableNames) {
+					String resetQuery = "DELETE FROM " + tableName;
+					PreparedStatement statement = connection.prepareStatement(resetQuery);
+					statement.executeUpdate(); // Delete all rows from the table
+				}
+
+				// Reload data in the tables
+				for (String tableName : tableNames) {
+					DefaultTableModel model = tableModels.get(tableName);
+					ResultSet resultSet = DatabaseUtil.getTableData(connection, tableName);
+					populateTable(resultSet, model);
+				}
+
+				JOptionPane.showMessageDialog(this, "Tables reset successfully.");
+			} catch (SQLException e) {
+				JOptionPane.showMessageDialog(this, "Error resetting tables.", "Error", JOptionPane.ERROR_MESSAGE);
+				e.printStackTrace();
+			}
+		}
+	}
+
 	public static void main(String[] args) {
 		SwingUtilities.invokeLater(EMA::new);
 	}
-}
 
-
- class EmployeeDatabase {
-	private Connection connection;
-
-	public EmployeeDatabase() throws SQLException, ClassNotFoundException {
-		connect();
-	}
-
-	public void connect() throws SQLException, ClassNotFoundException {
-		Class.forName("org.sqlite.JDBC");
-		connection = DriverManager.getConnection("jdbc:sqlite::resource:DB/bluejayDB.sqlite");
-		if (connection == null) {
-			JOptionPane.showMessageDialog(null, "Failed to connect to Database", "Error", JOptionPane.ERROR_MESSAGE);
-			throw new SQLException("Failed to establish connection to the database.");
-		}
-	}
-
-	public Connection getConnection() {
-		return connection;
-	}
-
-	public ResultSet getEMP() throws SQLException {
-		if (connection == null) {
-			throw new SQLException("Connection is null. Make sure to establish the connection.");
-		}
-
-		PreparedStatement statement = connection.prepareStatement("SELECT * FROM employees");
-		return statement.executeQuery();
-	}
-	
-	public ResultSet getUsers() throws SQLException {
-		if (connection == null) {
-			throw new SQLException("Connection is null. Make sure to establish the connection.");
-		}
-
-		PreparedStatement statement = connection.prepareStatement("SELECT * FROM users");
-		return statement.executeQuery();
-	}
-	
-	public ResultSet getAttendance() throws SQLException 
-	{
-		if (connection == null) {
-			throw new SQLException("Connection is null. Make sure to establish the connection.");
-		}
-
-		PreparedStatement statement = connection.prepareStatement("SELECT * FROM attendance");
-		return statement.executeQuery();
-			
-	}
-	
-	public ResultSet getDeductions() throws SQLException 
-	{
-		if (connection == null) {
-			throw new SQLException("Connection is null. Make sure to establish the connection.");
-		}
-
-		PreparedStatement statement = connection.prepareStatement("SELECT * FROM deductions");
-		return statement.executeQuery();
-			
-	}
-
-	public ResultSet getTypes() throws SQLException 
-	{
-		if (connection == null) {
-			throw new SQLException("Connection is null. Make sure to establish the connection.");
-		}
-
-		PreparedStatement statement = connection.prepareStatement("SELECT * FROM types");
-		return statement.executeQuery();
-			
-	}
-
-	
-	public void closeConnection() {
-		try {
-			if (connection != null) {
+	@Override
+	public void dispose() {
+		super.dispose();
+		// Close the database connection when the frame is closed
+		if (connection != null) {
+			try {
 				connection.close();
+			} catch (SQLException e) {
+				e.printStackTrace();
 			}
-		} catch (SQLException e) {
-			e.printStackTrace();
 		}
 	}
-
 }
