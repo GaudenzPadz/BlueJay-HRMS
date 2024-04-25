@@ -143,14 +143,14 @@ public class LoginPanel extends JPanel {
 	    System.out.println(loginResult);
 	    if (loginResult.startsWith("Login successful!")) {
 	        if (loginResult.contains("ADMIN")) {
-	            Main.frame.replaceContentPane(new AdminPanel(), new BorderLayout());
+	            Main.frame.replaceContentPane("Admin Panel",new AdminPanel(), new BorderLayout());
 
 	        } else if (loginResult.contains("Employee")) {
 	            Employee employee = Main.DB.getEmployeeDataByUsername(username);
 	            if (employee != null) {
 
 	                // Pass employee data to EmployeePanel
-	                Main.frame.replaceContentPane(new EmployeePanel(employee), new BorderLayout());
+	                Main.frame.replaceContentPane("Weld Well HRMS",new EmployeePanel(employee), new BorderLayout());
 	            } else {
 	                JOptionPane.showMessageDialog(null, "No employee data found for this user");
 	            }

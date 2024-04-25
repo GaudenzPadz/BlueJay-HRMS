@@ -11,6 +11,8 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.HashMap;
+import java.util.Map;
 
 import javax.imageio.ImageIO;
 import javax.swing.ButtonGroup;
@@ -32,7 +34,6 @@ import javax.swing.filechooser.FileNameExtensionFilter;
 
 import com.formdev.flatlaf.FlatClientProperties;
 
-import bluejay.Employee;
 import bluejayDB.EmployeeDatabase;
 import net.miginfocom.swing.MigLayout;
 
@@ -42,7 +43,6 @@ public class AddEMPPanel extends JPanel {
 	private JTextField fNameField;
 	private JTextField lNameField;
 	private JTextField workTypeField;
-	private JComboBox<String> workTypeCombobox;
 	private JTextField addressField;
 	private JTextField emailField;
 	private JTextField telField;
@@ -62,6 +62,9 @@ public class AddEMPPanel extends JPanel {
 	private JButton uploadBtn;
 	private BufferedImage image; // Store the uploaded image here
 	private int newId;
+	private JTextField wageField; // Field to display the wage
+	private JComboBox<String> workTypeCombobox;
+	private Map<String, Integer> workTypeWageMap; // Store work type to wage mapping
 
 	public AddEMPPanel() {
 		try {
@@ -74,7 +77,7 @@ public class AddEMPPanel extends JPanel {
 		setLayout(new MigLayout("center", "[center]", "[100px:300px,center][center]"));
 
 		panel = new JPanel(new MigLayout("wrap,fillx,insets 35 45 30 45", "[pref!,grow,fill]",
-				"[][][grow][][][][][][][][][][][][][][][][][][][][]"));
+				"[][][grow][][][][][][][][][][][][][][][][][][][][][][][]"));
 		sp = new JScrollPane(panel);
 		sp.putClientProperty(FlatClientProperties.STYLE,
 				"arc:20;" + "[light]background:darken(@background,3%);" + "[dark]background:lighten(@background,3%)");
@@ -120,18 +123,36 @@ public class AddEMPPanel extends JPanel {
 
 		ButtonGroup groupGender = new ButtonGroup();
 
-		workTypeCombobox = new JComboBox<String>();
-		workTypeCombobox.putClientProperty(FlatClientProperties.PLACEHOLDER_TEXT, "Work Type");
-		populateComboBox(workTypeCombobox);
+		// Initialize work type to wage mapping
+		workTypeWageMap = new HashMap<>();
+		populateWorkTypeWageMap(); // Load data from the database into the map
+
+		workTypeCombobox = new JComboBox<>();
+		wageField = new JTextField();
+		wageField.setEditable(false); // Set as non-editable
+
+		// Add work types to the combobox
+		for (String workType : workTypeWageMap.keySet()) {
+			workTypeCombobox.addItem(workType);
+		}
+
+		// ActionListener to update the wage field when the work type is selected
+		workTypeCombobox.addActionListener((ActionEvent e) -> {
+			updateWageField(); // Call the method to update the wage
+		});
+
 		// Adding a new item for "Other"
 		workTypeCombobox.addItem("Other");
+		workTypeCombobox.putClientProperty(FlatClientProperties.PLACEHOLDER_TEXT, "Work Type");
 
 		// Add ActionListener to JComboBox
 		workTypeCombobox.addActionListener((ActionEvent e) -> {
 			if ("Other".equals(workTypeCombobox.getSelectedItem())) {
 				workTypeField.setEnabled(true); // Enable the JTextField for custom input
+				wageField.setEditable(true); // Set as non-editable
 			} else {
 				workTypeField.setEnabled(false); // Disable if "Other" is not selected
+				wageField.setEditable(false); // Set as non-editable
 			}
 		});
 
@@ -166,60 +187,68 @@ public class AddEMPPanel extends JPanel {
 		panel.add(workTypeCombobox, "flowx,cell 0 4,alignx right");
 		panel.add(workTypeField, "cell 0 4,alignx right");
 
-		panel.add(label, "cell 0 5");
+		lblRate = new JLabel("Wage");
+		panel.add(lblRate, "cell 0 5");
 
-		panel.add(addressField, "cell 0 6,growx");
+		wageField = new JTextField();
+		wageField.setEditable(false);
+		panel.add(wageField, "cell 0 6,growx");
+		wageField.setColumns(10);
+
+		panel.add(label, "cell 0 7");
+
+		panel.add(addressField, "cell 0 8,growx");
 
 		JLabel lblNewLabel_7 = new JLabel("Employee's ID:");
-		panel.add(lblNewLabel_7, "flowx,cell 0 7");
+		panel.add(lblNewLabel_7, "flowx,cell 0 9");
 
-		panel.add(lblNewLabel_2, "cell 0 8,gapy 5");
+		panel.add(lblNewLabel_2, "cell 0 10,gapy 5");
 
-		panel.add(genderPanel, "cell 0 9");
+		panel.add(genderPanel, "cell 0 11");
 
-		panel.add(lblNewLabel_3, "cell 0 10");
+		panel.add(lblNewLabel_3, "cell 0 12");
 
-		panel.add(telField, "flowx,cell 0 11,growx");
+		panel.add(telField, "flowx,cell 0 13,growx");
 		JLabel lblNewLabel_4 = new JLabel("Email");
 
-		panel.add(lblNewLabel_4, "cell 0 12");
+		panel.add(lblNewLabel_4, "cell 0 14");
 		emailField = new JTextField(10);
 		emailField.putClientProperty(FlatClientProperties.PLACEHOLDER_TEXT, "Enter email");
 
-		panel.add(emailField, "cell 0 13,growx");
+		panel.add(emailField, "cell 0 15,growx");
 
 		JLabel lblNewLabel_6 = new JLabel("Date of Birth");
-		panel.add(lblNewLabel_6, "cell 0 14");
+		panel.add(lblNewLabel_6, "cell 0 16");
 
 		// date of birth field
 		DOBField = new JTextField(10);
 		DOBField.putClientProperty("JTextField.placeholderText", "dd/MM/yyyy"); // Placeholder text
 
-		panel.add(DOBField, "cell 0 15,growx");
-		panel.add(new JSeparator(), "cell 0 16,gapy 5 5");
+		panel.add(DOBField, "cell 0 17,growx");
+		panel.add(new JSeparator(), "cell 0 18,gapy 5 5");
 
 		JLabel lblNewLabel = new JLabel("Username");
-		panel.add(lblNewLabel, "cell 0 17");
+		panel.add(lblNewLabel, "cell 0 19");
 
 		usernameField = new JTextField(10);
 		usernameField.putClientProperty(FlatClientProperties.PLACEHOLDER_TEXT, "Enter username");
-		panel.add(usernameField, "cell 0 18,growx");
+		panel.add(usernameField, "cell 0 20,growx");
 
 		JLabel lblNewLabel_5 = new JLabel("Password");
-		panel.add(lblNewLabel_5, "cell 0 19");
+		panel.add(lblNewLabel_5, "cell 0 21");
 
 		passwordField = new JPasswordField();
 		passwordField.putClientProperty(FlatClientProperties.PLACEHOLDER_TEXT, "Enter password");
 
-		panel.add(passwordField, "cell 0 20,growx");
+		panel.add(passwordField, "cell 0 22,growx");
 		passwordField.setColumns(10);
 
 		separator = new JSeparator();
-		panel.add(separator, "cell 0 21,growx");
+		panel.add(separator, "cell 0 23,growx");
 
 		btnNewButton = new JButton("Add Employee");
 		btnNewButton.addActionListener(this::addButtonClicked);
-		panel.add(btnNewButton, "cell 0 22");
+		panel.add(btnNewButton, "cell 0 24");
 
 		textField_4 = new JTextField();
 		try {
@@ -232,27 +261,42 @@ public class AddEMPPanel extends JPanel {
 		}
 
 		textField_4.setEditable(false);
-		panel.add(textField_4, "cell 0 7");
+		panel.add(textField_4, "cell 0 9");
 		textField_4.setColumns(10);
 
 	}
 
-	private void populateComboBox(JComboBox<String> workTypeBox) {
+	private void populateWorkTypeWageMap() {
 		try {
-			ResultSet rs = db.getTypes();
+			ResultSet rs = db.getTypes(); // Get data from the database
 			while (rs.next()) {
-				workTypeBox.addItem(rs.getString("work_type"));
+				String workType = rs.getString("work_type");
+				int wage = rs.getInt("wage");
+				workTypeWageMap.put(workType, wage); // Store in the map
 			}
 		} catch (SQLException e) {
 			e.printStackTrace();
-			JOptionPane.showMessageDialog(null, "Failed to fetch work types from the database.", "Error",
+			JOptionPane.showMessageDialog(null, "Error fetching work types and wages.", "Error",
 					JOptionPane.ERROR_MESSAGE);
+		}
+	}
+
+	private void updateWageField() {
+		String selectedWorkType = (String) workTypeCombobox.getSelectedItem();
+		if (selectedWorkType != null) {
+			Integer wage = workTypeWageMap.get(selectedWorkType);
+			if (wage != null) {
+				wageField.setText(String.valueOf(wage)); // Set the wage value
+			} else {
+				wageField.setText(""); // No wage found, clear the field
+			}
 		}
 	}
 
 	File selectedFile;
 	private JPanel imagePanel;
 	private JPanel uploadPanel;
+	private JLabel lblRate;
 
 	private void uploadImage() {
 		JFileChooser fileChooser = new JFileChooser();
@@ -325,8 +369,8 @@ public class AddEMPPanel extends JPanel {
 				imageData = fileToByteArray(selectedFile);
 
 			}
-			String middleName = null;
-			db.insertEMPData(firstName, lastName, address, workType, gender, telNum, DOB, email, imageData);
+			double wage = Double.valueOf(wageField.getText());
+			db.insertEMPData(firstName, lastName, address, workType, wage, gender, telNum, DOB, email, imageData);
 			String Role = "Employee";
 			db.insertEMPCredentials(firstName + " " + lastName, username, password, Role);
 			JOptionPane.showMessageDialog(null, "Employee added successfully.", "Success",

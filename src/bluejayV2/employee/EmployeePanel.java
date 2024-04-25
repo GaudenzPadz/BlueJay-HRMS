@@ -36,10 +36,12 @@ public class EmployeePanel extends JPanel {
 		JPanel headerPanel = new JPanel();
 		headerPanel.setBackground(new Color(0, 191, 255));
 		headerPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
-		headerPanel.setLayout(new MigLayout("", "[30px][left][30][]", "[100px,grow]"));
+		headerPanel.setLayout(new MigLayout("", "[30px][left][30][]", "[100px,grow,shrink 70]"));
+		ImageIcon logoIcon = new ImageIcon(getClass().getResource("/images/logo.png"));
 
 		// Icon Label
-		JLabel iconLabel = new JLabel("ICON");
+		JLabel iconLabel = new JLabel();
+		iconLabel.setIcon(null);
 		iconLabel.setFont(new Font("SansSerif", Font.BOLD, 24));
 		iconLabel.setForeground(Color.WHITE);
 		headerPanel.add(iconLabel, "cell 1 0,alignx left,growy");
@@ -76,65 +78,70 @@ public class EmployeePanel extends JPanel {
 		add(menuPanel, BorderLayout.CENTER);
 
 		menuPanel.setLayout(new MigLayout("center", "[grow,fill][200][100][200][100][200,grow][grow,fill]",
-				"[100px][][10px:30px:50px][grow][10px:30px:50px]"));
+				"[100px][][10px:30px:50px][grow][][10px:30px:50px]"));
 
 		ImageIcon profileIcon = new ImageIcon(getClass().getResource("/images/96x96/profile.png"));
 
-		ButtonPanel panel_2 = new ButtonPanel(Color.decode("#002C4B"), profileIcon, "View/Update Profile",
-				" click to view or update profile information ");
-		panel_2.addMouseListener(new MouseAdapter() {
+		ButtonPanel profileCBtn = new ButtonPanel(Color.decode("#002C4B"), profileIcon, "View/Update Profile",
+				"click to view or update profile information");
+		profileCBtn.addMouseListener(new MouseAdapter() {
 			@Override
 			public void mouseClicked(MouseEvent e) {
-				Main.frame.replaceContentPane(new ProfilePanel(employee), getLayout());
+				Main.frame.replaceContentPane("Profile", new ProfilePanel(employee), getLayout());
 			}
 		});
-		menuPanel.add(panel_2, "cell 1 1,growx,aligny center");
+		menuPanel.add(profileCBtn, "cell 1 1,growx,aligny center");
 
 		ImageIcon attendanceIcon = new ImageIcon(getClass().getResource("/images/96x96/attendance.png"));
 		// " click to view or update profile information "
-		ButtonPanel panel_1 = new ButtonPanel(Color.decode("#002C4B"), attendanceIcon, "Check/Update Attendance",
-				"     click to check or update attendance     ");
-		panel_1.addMouseListener(new MouseAdapter() {
+		ButtonPanel attendanceFormCBtn = new ButtonPanel(Color.decode("#002C4B"), attendanceIcon, "Fill Attendance",
+				"       click to fill up attendance form      ");
+		attendanceFormCBtn.addMouseListener(new MouseAdapter() {
 			@Override
 			public void mouseClicked(MouseEvent e) {
-				System.out.println("Button 2 clicked!");
+				Main.frame.replaceContentPane("Attendance Form", new AttendanceForm(employee), getLayout());
 			}
 		});
-		menuPanel.add(panel_1, "cell 3 1");
+		menuPanel.add(attendanceFormCBtn, "cell 3 1,growx,aligny center");
 
-		ImageIcon payrollIcon = new ImageIcon(getClass().getResource("/images/96x96/invoice.png"));
+		ImageIcon payrollIcon = new ImageIcon(getClass().getResource("/images/96x96/calendar.png"));
 
-		ButtonPanel panel_4 = new ButtonPanel(Color.decode("#002C4B"), payrollIcon, "Check/Update Payroll",
-				"      click to check or update Payroll       ");
-		panel_4.addMouseListener(new MouseAdapter() {
+		ButtonPanel updateAttendanceCBtn = new ButtonPanel(Color.decode("#002C4B"), payrollIcon, "Check Attendancel",
+				"click to check Attendance");
+		updateAttendanceCBtn.addMouseListener(new MouseAdapter() {
 			@Override
 			public void mouseClicked(MouseEvent e) {
 				System.out.println("Button 3 clicked!");
 			}
 		});
-		menuPanel.add(panel_4, "cell 5 1,aligny center");
+		menuPanel.add(updateAttendanceCBtn, "cell 5 1,growx,aligny center");
 
 		ImageIcon printIcon = new ImageIcon(getClass().getResource("/images/96x96/invoice.png"));
 
-		JPanel panel_3 = new ButtonPanel(Color.decode("#002C4B"), printIcon, "Print Payslip", "click to print Payslip");
-		panel_3.addMouseListener(new MouseAdapter() {
+		JPanel checkPayrollCBtn = new ButtonPanel(Color.decode("#002C4B"), printIcon, "Check Payroll",
+				"click to check Payroll");
+		checkPayrollCBtn.addMouseListener(new MouseAdapter() {
 			@Override
 			public void mouseClicked(MouseEvent e) {
 //
 			}
 		});
-		menuPanel.add(panel_3, "cell 1 3,growx,aligny center");
-		
+		menuPanel.add(checkPayrollCBtn, "cell 1 3,growx,aligny center");
+
 		ImageIcon logoutIcon = new ImageIcon(getClass().getResource("/images/logout.png"));
 
-		ButtonPanel panel_3_1 =  new ButtonPanel(Color.decode("#002C4B"), logoutIcon, "Logout", "");
-		panel_3_1.addMouseListener(new MouseAdapter() {
+		JPanel printPayrollCBtn = new ButtonPanel(Color.decode("#002C4B"), printIcon, "Print Payslip",
+				"click to print Payslip");
+		printPayrollCBtn.addMouseListener(new MouseAdapter() {
 			@Override
 			public void mouseClicked(MouseEvent e) {
-				Main.frame.replaceContentPane(new LoginPanel(), new BorderLayout());
+//
 			}
 		});
-		menuPanel.add(panel_3_1, "cell 5 3,grow");
+		menuPanel.add(printPayrollCBtn, "cell 3 3,growx,aligny center");
+
+		JPanel logoutCBtn = new ButtonPanel(Color.decode("#002C4B"), logoutIcon, "Logout", null);
+		menuPanel.add(logoutCBtn, "cell 5 3,grow");
 
 	}
 

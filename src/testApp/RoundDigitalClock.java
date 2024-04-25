@@ -5,6 +5,7 @@ import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.EventQueue;
 import java.awt.FlowLayout;
+import java.awt.Font;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.GridLayout;
@@ -26,12 +27,14 @@ import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JSpinner;
 import javax.swing.SpinnerDateModel;
+import javax.swing.SwingConstants;
 import javax.swing.Timer;
 import javax.swing.border.EmptyBorder;
 
 import org.jdatepicker.impl.JDatePanelImpl;
 import org.jdatepicker.impl.JDatePickerImpl;
 import org.jdatepicker.impl.UtilDateModel;
+import net.miginfocom.swing.MigLayout;
 
 public class RoundDigitalClock extends JFrame {
 
@@ -44,41 +47,7 @@ public class RoundDigitalClock extends JFrame {
 		setSize(1000, 1000);
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
-		clockPanel = new DialPanel();
-		clockPanel.setPreferredSize(new Dimension(200, 200)); // Adjust size as needed
-
-		JPanel digitalClockPanel = new JPanel();
-
-//		HH: mm: ss
-		JLabel hoursLabel = new JLabel("00 :");
-
-		JLabel minutesLabel = new JLabel("00 :");
-
-		JLabel secondsLabel = new JLabel("00");
-
-		Timer timer = new Timer(1000, new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				hoursLabel.setText(new SimpleDateFormat("HH: ").format(Calendar.getInstance().getTime()));
-				minutesLabel.setText(new SimpleDateFormat("mm: ").format(Calendar.getInstance().getTime()));
-				secondsLabel.setText(new SimpleDateFormat("ss").format(Calendar.getInstance().getTime()));
-
-				clockPanel.repaint();
-			}
-		});// Update every second
-
-		timer.start();
-
-		digitalClockPanel.add(hoursLabel);
-		digitalClockPanel.add(minutesLabel);
-		digitalClockPanel.add(secondsLabel);
-
-		getContentPane().add(clockPanel);
-
-		JPanel panel = new JPanel();
-		getContentPane().add(panel);
-		getContentPane().add(digitalClockPanel);
-		getContentPane().setLayout(new FlowLayout(FlowLayout.CENTER, 5, 5));
+		getContentPane().setLayout(new MigLayout("", "[10px][70px][46px][429px][][]", "[127px][][][]"));
 
 		JPanel inputPanel = new JPanel(new GridLayout(4, 2, 5, 5));
 		inputPanel.setBorder(new EmptyBorder(10, 10, 10, 10));
@@ -114,44 +83,44 @@ public class RoundDigitalClock extends JFrame {
 		inputPanel.add(overtime);
 
 		JButton addAttendanceButton = new JButton("Add Attendance");
-		
+
 		UtilDateModel model = new UtilDateModel();
 		Properties p = new Properties();
 		p.put("text.year", "Year");
 		p.put("text.month", "Month");
 		p.put("text.today", "Today");
 		JDatePanelImpl datePanel = new JDatePanelImpl(model, p);
-		AbstractFormatter DateLabelFormatter = new AbstractFormatter(){
-			
+		AbstractFormatter DateLabelFormatter = new AbstractFormatter() {
+
 			private static final long serialVersionUID = -3517374967067627101L;
 			private String datePattern = "yyyy-MM-dd";
-		    private SimpleDateFormat dateFormatter = new SimpleDateFormat(datePattern);
+			private SimpleDateFormat dateFormatter = new SimpleDateFormat(datePattern);
 
-		    @Override
-		    public Object stringToValue(String text) throws ParseException {
-		        return dateFormatter.parseObject(text);
-		    }
+			@Override
+			public Object stringToValue(String text) throws ParseException {
+				return dateFormatter.parseObject(text);
+			}
 
-		    @Override
-		    public String valueToString(Object value) throws ParseException {
-		        if (value != null) {
-		            Calendar cal = (Calendar) value;
-		            return dateFormatter.format(cal.getTime());
-		        }
+			@Override
+			public String valueToString(Object value) throws ParseException {
+				if (value != null) {
+					Calendar cal = (Calendar) value;
+					return dateFormatter.format(cal.getTime());
+				}
 
-		        return "";
-		    }
+				return "";
+			}
 
 		};
 		JDatePickerImpl datePicker = new JDatePickerImpl(datePanel, DateLabelFormatter);
 		model.setSelected(true);
-		
+
 //		UtilCalendarModel model = new UtilCalendarModel();
 //		SqlDateModel model = new SqlDateModel();
-				
+
 //		datePicker = new JDatePickerImpl(datePanel);
-		//datePicker = new JDatePickerImpl(datePanel, new DateLabelFormatter());
-		
+		// datePicker = new JDatePickerImpl(datePanel, new DateLabelFormatter());
+
 		addAttendanceButton.addActionListener(e -> {
 			// Retrieve data from input fields
 			Calendar calendar = Calendar.getInstance();
@@ -170,18 +139,56 @@ public class RoundDigitalClock extends JFrame {
 			int overtimeValue = (int) overtime.getValue();
 
 			// Call method to insert attendance data into database
-		//	employeeDb.insertAttendanceData(firstNameField.getText(), sqlDate, timeIn, timeOut, overtimeValue);
+			// employeeDb.insertAttendanceData(firstNameField.getText(), sqlDate, timeIn,
+			// timeOut, overtimeValue);
 			// Read attendance data and update the table model
-		//	employeeDb.readAttendanceData((DefaultTableModel) attendanceTable.getModel());
-			
+			// employeeDb.readAttendanceData((DefaultTableModel)
+			// attendanceTable.getModel());
+
 			Date selectedDate = (Date) datePicker.getModel().getValue();
 			JOptionPane.showMessageDialog(this, "The selected date is " + selectedDate);
 
 		});
+		JLabel ClockLabel = new JLabel("New label");
+
+		JPanel digitalClockPanel = new JPanel();
+		// HH: mm: ss
+		JLabel hoursLabel = new JLabel("00 :");
+
+		JLabel minutesLabel = new JLabel("00 :");
+
+		JLabel secondsLabel = new JLabel("00");
+		Timer timer = new Timer(1000, new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				hoursLabel.setText(new SimpleDateFormat("HH: ").format(Calendar.getInstance().getTime()));
+				minutesLabel.setText(new SimpleDateFormat("mm: ").format(Calendar.getInstance().getTime()));
+				secondsLabel.setText(new SimpleDateFormat("ss").format(Calendar.getInstance().getTime()));
+				String Datetime = new Date().toString();
+//                String Datetime = new Date().toLocaleString();
+				ClockLabel.setText(Datetime);
+				clockPanel.repaint();
+			}
+		});// Update every second
+
+		timer.start();
+
+		digitalClockPanel.add(hoursLabel);
+		digitalClockPanel.add(minutesLabel);
+		digitalClockPanel.add(secondsLabel);
+		getContentPane().add(digitalClockPanel, "cell 2 0,alignx left,aligny center");
 		inputPanel.add(datePicker);
 		inputPanel.add(addAttendanceButton);
 
-		add(inputPanel, BorderLayout.SOUTH);
+		getContentPane().add(inputPanel, "cell 3 0,alignx left,aligny top");
+
+		getContentPane().add(ClockLabel, "cell 3 2,alignx center,aligny center");
+		  clockPanel= new DialPanel();
+//		JPanel clockPanel_1 = new JPanel();
+
+		clockPanel.setPreferredSize(new Dimension(200, 200)); // Adjust size as needed
+
+		getContentPane().add(clockPanel, "cell 4 2");
 
 	}
 
@@ -240,9 +247,62 @@ public class RoundDigitalClock extends JFrame {
 		EventQueue.invokeLater(new Runnable() {
 			@Override
 			public void run() {
-				new RoundDigitalClock().setVisible(true);
+//				new RoundDigitalClock().setVisible(true);
+				new Window();
 			}
 		});
 	}
 }
 
+class Window extends JFrame {
+
+	private JLabel Heading;
+	private JLabel ClockLabel;
+	private Font font;
+
+	Window() {
+		super.setTitle("DIGITAL CLOCK");
+		super.setSize(1000, 400);
+		super.setLocationRelativeTo(null);
+		super.setDefaultCloseOperation(EXIT_ON_CLOSE);
+		super.setVisible(true);
+		this.createGUI();
+		this.startclock();
+
+	}
+
+	public void createGUI() {
+
+		// Background color
+		getContentPane().setBackground(Color.BLACK);
+
+		// Create GUI
+		Heading = new JLabel("DIGITAL CLOCK");
+		Heading.setForeground(Color.WHITE);
+		Heading.setHorizontalAlignment(SwingConstants.CENTER);
+
+		ClockLabel = new JLabel(" Clock");
+		ClockLabel.setForeground(Color.gray);
+		ClockLabel.setHorizontalAlignment(SwingConstants.CENTER);
+
+		font = new Font("", Font.BOLD, 70);
+
+		Heading.setFont(font);
+		ClockLabel.setFont(font);
+		this.setLayout(new GridLayout(2, 1));
+		this.add(Heading);
+		this.add(ClockLabel);
+	}
+
+	public void startclock() {
+		Timer timer = new Timer(1000, new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+//				String Datetime = new Date().toString();
+                String Datetime = new Date().toLocaleString();
+				ClockLabel.setText(Datetime);
+			}
+		});
+		timer.start();
+	}
+}

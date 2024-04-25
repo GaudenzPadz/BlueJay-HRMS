@@ -63,7 +63,7 @@ public class ProfilePanel extends JPanel {
 		btnNewButton.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				Main.frame.replaceContentPane(new EmployeePanel(employee), getLayout());
+				Main.frame.replaceContentPane("Weld Well HRMS",new EmployeePanel(employee), getLayout());
 			}
 		});
 

@@ -190,7 +190,7 @@ public class LIST {
 			int confirm = JOptionPane.showConfirmDialog(null, "Are you sure you want to delete this employee?",
 					"Confirm Deletion", JOptionPane.YES_NO_OPTION);
 			if (confirm == JOptionPane.YES_OPTION) {
-				db.deleteEmployeeData(employeeId);
+				db.deleteEmployeeData(employeeId,"");
 				JOptionPane.showMessageDialog(null, "Employee deleted successfully.", "Success",
 						JOptionPane.INFORMATION_MESSAGE);
 				// Refresh table to reflect changes
@@ -296,7 +296,7 @@ public class LIST {
 		String idString = JOptionPane.showInputDialog("Enter the ID of the record to delete:");
 		if (idString != null && !idString.isEmpty()) {
 			int id = Integer.parseInt(idString);
-			db.deleteEmployeeData(id);
+			db.deleteEmployeeData(id,"");
 			reloadData(db);
 		}
 	}

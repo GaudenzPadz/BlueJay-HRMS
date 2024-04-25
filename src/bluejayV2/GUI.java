@@ -49,13 +49,14 @@ public class GUI extends JFrame {
 	}
 
 	// a method to use to replace the panels
-	public void replaceContentPane(JPanel form, LayoutManager manager) {
+	public void replaceContentPane(String title, JPanel form, LayoutManager manager) {
 		EventQueue.invokeLater(() -> {
 			FlatAnimatedLafChange.showSnapshot();
 			getContentPane().removeAll();
 			getContentPane().revalidate();
 			getContentPane().repaint();
 			getContentPane().setLayout(manager);
+			this.setTitle(title);
 			setContentPane(form);
 			FlatAnimatedLafChange.hideSnapshotWithAnimation();
 		});

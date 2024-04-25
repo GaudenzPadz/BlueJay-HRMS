@@ -24,7 +24,7 @@ import net.miginfocom.swing.MigLayout;
 public class AdminPanel extends JPanel {
 
 	private static final long serialVersionUID = 1L;
-	public JPanel mainPanel;
+	public static JPanel mainPanel;
 	public JPanel sidePanel;
 	private SideMenu sideMenu;
 	public ImageIcon backIcon = new ImageIcon(getClass().getResource("/images/back.png"));
@@ -189,7 +189,7 @@ public class AdminPanel extends JPanel {
 		logoutBtn.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				Main.frame.replaceContentPane(new LoginPanel(), new BorderLayout());
+				Main.frame.replaceContentPane("Login",new LoginPanel(), new BorderLayout());
 			}
 		});
 		JLabel logoutLabel = new JLabel("Logout");

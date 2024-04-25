@@ -79,12 +79,12 @@ public class EmployeeDatabase {
 				employee.setEmail(rs.getString("email"));
 				employee.setDateHired(rs.getDate("date_hired"));
 				employee.setDOB(rs.getDate("DOB"));
-				
+
 				byte[] imageData = rs.getBytes("profile_image");
-		        if (imageData != null) {
-		            employee.setProfileImage(imageData);
-		        }
-		        
+				if (imageData != null) {
+					employee.setProfileImage(imageData);
+				}
+
 				return employee;
 			} else {
 				return null; // No employee data found for this username
@@ -108,7 +108,7 @@ public class EmployeeDatabase {
 
 	public ResultSet getTypes() {
 		try {
-			PreparedStatement statement = connection.prepareStatement("SELECT work_type FROM types");
+			PreparedStatement statement = connection.prepareStatement("SELECT * FROM types");
 			return statement.executeQuery();
 		} catch (SQLException e) {
 			e.printStackTrace();
@@ -117,11 +117,11 @@ public class EmployeeDatabase {
 
 	}
 
-	public void insertEMPData(String first_name, String last_name, String address, String workType, String gender,
-			String telNum, Date DOB, String email, byte[] imageData) {
+	public void insertEMPData(String first_name, String last_name, String address, String workType, double wage,
+			String gender, String telNum, Date DOB, String email, byte[] imageData) {
 		try {
 			// Insert the new employee with the new ID
-			String sql = "INSERT INTO employees (id, first_name, last_name, address, work_type, gender, tel_number, DOB, email, profile_image) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+			String sql = "INSERT INTO employees (id, first_name, last_name, address, work_type, rate, gender, tel_number, DOB, email, profile_image) VALUES (?, ?,?, ?, ?, ?, ?, ?, ?, ?, ?)";
 			PreparedStatement statement = connection.prepareStatement(sql);
 			// Increment the last ID to get the new ID
 			int newId = getLastEmployeeId() + 1;
@@ -130,11 +130,12 @@ public class EmployeeDatabase {
 			statement.setString(3, last_name);
 			statement.setString(4, address);
 			statement.setString(5, workType);
-			statement.setString(6, gender);
-			statement.setString(7, telNum);
-			statement.setDate(8, DOB);
-			statement.setString(9, email);
-			statement.setBytes(10, imageData);
+			statement.setDouble(6, wage);
+			statement.setString(7, gender);
+			statement.setString(8, telNum);
+			statement.setDate(9, DOB);
+			statement.setString(10, email);
+			statement.setBytes(11, imageData);
 
 			statement.executeUpdate();
 			System.out.println("Record created.");
@@ -151,7 +152,7 @@ public class EmployeeDatabase {
 			statement.setString(2, username);
 			statement.setString(3, passw);
 			statement.setString(4, role);
-			
+
 			statement.executeUpdate();
 		} catch (SQLException e) {
 			// TODO Auto-generated catch block
@@ -172,14 +173,37 @@ public class EmployeeDatabase {
 		return lastId;
 	}
 
-	public void deleteEmployeeData(int id) {
+	public void deleteEmployeeData(int id, String name) {
 		try {
-			PreparedStatement statement = connection.prepareStatement("DELETE FROM employees WHERE id = ?");
-			statement.setInt(1, id);
-			statement.executeUpdate();
+			connection.setAutoCommit(false); // Begin transaction
+
+			try (PreparedStatement statement = connection.prepareStatement("DELETE FROM employees WHERE id = ?")) {
+				statement.setInt(1, id);
+				statement.executeUpdate();
+			}
+
+			try (PreparedStatement st = connection.prepareStatement("DELETE FROM users WHERE name = ?")) {
+				st.setString(1, name);
+				st.executeUpdate();
+			}
+
+			connection.commit(); // Commit transaction
 			System.out.println("Record deleted.");
+
 		} catch (SQLException e) {
+			try {
+				connection.rollback(); // Rollback transaction on error
+				System.err.println("Error during deletion. Rolled back.");
+			} catch (SQLException rollbackEx) {
+				rollbackEx.printStackTrace();
+			}
 			e.printStackTrace();
+		} finally {
+			try {
+				connection.setAutoCommit(true); // Restore auto-commit
+			} catch (SQLException autoCommitEx) {
+				autoCommitEx.printStackTrace();
+			}
 		}
 	}
 
@@ -234,45 +258,28 @@ public class EmployeeDatabase {
 		}
 	}
 
-	public void insertAttendanceData(String name, Date date, Time timeIn, Time timeOut, int overtime) {
-		try {
-			String sql = "INSERT INTO attendance (name, date, time_in, time_out, overtime) VALUES (?, ?, ?, ?, ?)";
-			PreparedStatement statement = connection.prepareStatement(sql);
-			statement.setString(1, name);
-			statement.setDate(2, date);
+	public void insertAttendance(int employeeId, String name, String date, String timeIn, String overtime,
+			String note) {
+		String insertSQL = "INSERT INTO attendance (employee_id, name, date, time_in, time_out, overtime, note) VALUES (?, ?, ?, ?, ?, ?,?)";
 
-			// Format timeIn and timeOut as strings
-			SimpleDateFormat sdf = new SimpleDateFormat("hh:mm:ss");
-			String timeInStr = sdf.format(timeIn);
-			String timeOutStr = sdf.format(timeOut);
+		try (PreparedStatement pstmt = connection.prepareStatement(insertSQL)) {
+			pstmt.setInt(1, employeeId); // Use employee ID
+			pstmt.setString(2, name);
+			pstmt.setString(3, date); // Current date
+			pstmt.setString(4, timeIn); // Time In
+			pstmt.setString(5, overtime);
+			pstmt.setString(6, note);
 
-			// Convert timeIn and timeOut strings back to Time objects
-			Time timeInFormatted = Time.valueOf(timeInStr);
-			Time timeOutFormatted = Time.valueOf(timeOutStr);
+			pstmt.executeUpdate();
 
-			statement.setTime(3, timeInFormatted);
-			statement.setTime(4, timeOutFormatted);
-			statement.setInt(5, overtime);
-			statement.executeUpdate();
-			System.out.println("Attendance record created.");
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}
 	}
 
-	public ResultSet getAllAttendanceData() {
-		try {
-			PreparedStatement statement = connection.prepareStatement("SELECT * FROM attendance");
-			return statement.executeQuery();
-		} catch (SQLException e) {
-			return null;
-		}
-	}
-
 	public double countAttendances(String name) {
 		try {
-			PreparedStatement statement = connection
-					.prepareStatement("SELECT COUNT(*) AS count FROM attendance WHERE name = ?");
+			PreparedStatement statement = connection.prepareStatement("SELECT COUNT(*) AS count FROM attendance WHERE name = ?");
 			statement.setString(1, name);
 			ResultSet rs = statement.executeQuery();
 			if (rs.next()) {
@@ -284,24 +291,52 @@ public class EmployeeDatabase {
 		return 0;
 	}
 
-	public void readAttendanceData(DefaultTableModel model) {
-		try {
-			model.setRowCount(0);
-			PreparedStatement state = connection
-					.prepareStatement("SELECT date, time_in, time_out, overtime FROM attendance");
-			ResultSet rs = state.executeQuery();
+	public void loadAttendanceData(int employeeId, DefaultTableModel model) {
+		try (PreparedStatement pstmt = connection.prepareStatement("SELECT * FROM attendance WHERE employee_id = ?")) {
+			pstmt.setInt(1, employeeId);
+
+			ResultSet rs = pstmt.executeQuery();
 
 			while (rs.next()) {
-				Date date = rs.getDate("date");
-				Time timeIn = rs.getTime("time_in");
-				Time timeOut = rs.getTime("time_out");
-				int overtime = rs.getInt("overtime");
-
-				Object[] row = { date, timeIn, timeOut, overtime };
-				model.addRow(row);
+				// Add data to the JTable model
+				model.addRow(new Object[] { rs.getString("name"), rs.getString("date"), rs.getString("time_in"),
+						rs.getString("time_out"), rs.getString("overtime"), rs.getString("note") });
 			}
+
 		} catch (SQLException e) {
 			e.printStackTrace();
+		}
+	}
+
+	public void updateTimeOut(int employeeId, String date, String timeOut) {
+		String updateSQL = "UPDATE attendance SET time_out = ? WHERE employee_id = ? AND date = ? AND time_out IS NULL";
+
+		try (PreparedStatement pstmt = connection.prepareStatement(updateSQL)) {
+			pstmt.setString(1, timeOut);
+			pstmt.setInt(2, employeeId);
+			pstmt.setString(3, date);
+
+			pstmt.executeUpdate();
+
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+	}
+
+	public boolean hasCheckedIn(int employeeId, String date) {
+		String query = "SELECT * FROM attendance WHERE name = ? AND date = ? AND time_out IS NULL";
+
+		try (PreparedStatement pstmt = connection.prepareStatement(query)) {
+			pstmt.setInt(1, employeeId); // Use employee ID
+			pstmt.setString(2, date);
+
+			ResultSet rs = pstmt.executeQuery();
+
+			return rs.next(); // Returns true if there's a record without Time Out for this date
+
+		} catch (SQLException e) {
+			e.printStackTrace();
+			return false;
 		}
 	}
 

@@ -97,49 +97,49 @@ public class EMA extends JFrame {
 	}
 
 	private void resetTables() {
-		// Confirm the reset action with the user
-		int confirm = JOptionPane.showConfirmDialog(this,
-				"Are you sure you want to reset all data in the database? This action cannot be undone.",
-				"Confirm Reset", JOptionPane.YES_NO_OPTION);
-
-		if (confirm == JOptionPane.YES_OPTION) {
-			String[] tableNames = { "employees", "attendance", "users", "types" };
-			try {
-				for (String tableName : tableNames) {
-					String resetQuery = "DELETE FROM " + tableName;
-					PreparedStatement statement = connection.prepareStatement(resetQuery);
-					statement.executeUpdate(); // Delete all rows from the table
-				}
-
-				// Reload data in the tables
-				for (String tableName : tableNames) {
-					DefaultTableModel model = tableModels.get(tableName);
-					ResultSet resultSet = DatabaseUtil.getTableData(connection, tableName);
-					populateTable(resultSet, model);
-				}
-
-				JOptionPane.showMessageDialog(this, "Tables reset successfully.");
-			} catch (SQLException e) {
-				JOptionPane.showMessageDialog(this, "Error resetting tables.", "Error", JOptionPane.ERROR_MESSAGE);
-				e.printStackTrace();
-			}
-		}
+//		// Confirm the reset action with the user
+//		int confirm = JOptionPane.showConfirmDialog(this,
+//				"Are you sure you want to reset all data in the database? This action cannot be undone.",
+//				"Confirm Reset", JOptionPane.YES_NO_OPTION);
+//
+//		if (confirm == JOptionPane.YES_OPTION) {
+//			String[] tableNames = { "employees", "attendance", "users", "types" };
+//			try {
+//				for (String tableName : tableNames) {
+//					String resetQuery = "DELETE FROM " + tableName;
+//					PreparedStatement statement = connection.prepareStatement(resetQuery);
+//					statement.executeUpdate(); // Delete all rows from the table
+//				}
+//
+//				// Reload data in the tables
+//				for (String tableName : tableNames) {
+//					DefaultTableModel model = tableModels.get(tableName);
+//					ResultSet resultSet = DatabaseUtil.getTableData(connection, tableName);
+//					populateTable(resultSet, model);
+//				}
+//
+//				JOptionPane.showMessageDialog(this, "Tables reset successfully.");
+//			} catch (SQLException e) {
+//				JOptionPane.showMessageDialog(this, "Error resetting tables.", "Error", JOptionPane.ERROR_MESSAGE);
+//				e.printStackTrace();
+//			}
+//		}
 	}
 
 	public static void main(String[] args) {
 		SwingUtilities.invokeLater(EMA::new);
 	}
 
-	@Override
-	public void dispose() {
-		super.dispose();
-		// Close the database connection when the frame is closed
-		if (connection != null) {
-			try {
-				connection.close();
-			} catch (SQLException e) {
-				e.printStackTrace();
-			}
-		}
-	}
+//	@Override
+//	public void dispose() {
+//		super.dispose();
+//		// Close the database connection when the frame is closed
+//		if (connection != null) {
+//			try {
+//				connection.close();
+//			} catch (SQLException e) {
+//				e.printStackTrace();
+//			}
+//		}
+//	}
 }

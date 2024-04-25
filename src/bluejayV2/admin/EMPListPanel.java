@@ -45,14 +45,14 @@ public class EMPListPanel extends JPanel {
 	public JScrollPane scrollPane;
 	public JPanel searchPanel;
 
-	public  JTable table;
-	private  JPopupMenu popupMenu;
-	private  JMenuItem menuItemRemove, menuItemEdit;
+	public JTable table;
+	private JPopupMenu popupMenu;
+	private JMenuItem menuItemRemove, menuItemEdit;
 	public final Map<String, String> workTypeMap = new HashMap<>();
-	private  String[] column = { "ID", "First Name", "Last Name", "Address", "Work Type", "Rate", "Gross Pay",
+	private String[] column = { "ID", "First Name", "Last Name", "Address", "Work Type", "Wage", "Gross Pay",
 			"Net Pay" };
-	private  EmployeeDatabase db;
-	private  DefaultTableModel model = new DefaultTableModel(column, 0) {
+	private EmployeeDatabase db;
+	private DefaultTableModel model = new DefaultTableModel(column, 0) {
 
 		private static final long serialVersionUID = 4L;
 
@@ -61,7 +61,7 @@ public class EMPListPanel extends JPanel {
 			// Make all cells editable except the first row ID[0], Work Type[4], Rate[5],
 			// Gross[6], Net[7]
 
-			boolean[] columnEditables = new boolean[] { false, true, true, true, false, true, false, false };
+			boolean[] columnEditables = new boolean[] { false, true, true, true, true, true, false, false };
 			return columnEditables[columnIndex];
 		}
 	};
@@ -87,12 +87,12 @@ public class EMPListPanel extends JPanel {
 
 		TableColumnModel columnModel = table.getColumnModel();
 
-		columnModel.getColumn(0).setPreferredWidth(60);
+		columnModel.getColumn(0).setPreferredWidth(50);
 		columnModel.getColumn(0).setResizable(false);
 		columnModel.getColumn(1).setPreferredWidth(100);
 		columnModel.getColumn(2).setPreferredWidth(100);
 		columnModel.getColumn(3).setPreferredWidth(300);
-		columnModel.getColumn(4).setPreferredWidth(200);
+		columnModel.getColumn(4).setPreferredWidth(300);
 		columnModel.getColumn(5).setPreferredWidth(100);
 		columnModel.getColumn(6).setPreferredWidth(100);
 		columnModel.getColumn(7).setPreferredWidth(100);
@@ -150,8 +150,8 @@ public class EMPListPanel extends JPanel {
 			}
 		});
 		searchPanel.setLayout(new MigLayout("", "[230.00px][40px][120.00px]", "[20px]"));
-		
-		errorLabel = new JLabel("Error Label");
+
+		errorLabel = new JLabel("");
 		errorLabel.setForeground(Color.RED);
 		searchPanel.add(errorLabel, "cell 0 0,alignx left,aligny center");
 		searchPanel.add(new JLabel("Search: "), "cell 1 0,alignx left,aligny center");
@@ -161,7 +161,7 @@ public class EMPListPanel extends JPanel {
 		setLayout(new BorderLayout(10, 5));
 		add(searchPanel, BorderLayout.NORTH);
 		add(scrollPane, BorderLayout.CENTER);
-		
+
 		panel = new JPanel();
 		FlowLayout flowLayout = (FlowLayout) panel.getLayout();
 		flowLayout.setAlignment(FlowLayout.RIGHT);
@@ -225,6 +225,8 @@ public class EMPListPanel extends JPanel {
 	protected void saveToDB() {
 		int selectedRow = table.getSelectedRow();
 		if (selectedRow == -1) {
+			errorLabel.setText("No row selected, select a row to sae changes");
+
 			return; // No row selected, nothing to update
 		}
 
@@ -275,12 +277,14 @@ public class EMPListPanel extends JPanel {
 
 			// Get the employee ID from the selected row
 			int employeeId = (int) table.getValueAt(selectedRow, 0);
+			String empName = (String) table.getValueAt(selectedRow, 1) + "" + (String) table.getValueAt(selectedRow, 2);
 
 			// Confirm deletion with the user
 			int confirm = JOptionPane.showConfirmDialog(null, "Are you sure you want to delete this employee?",
 					"Confirm Deletion", JOptionPane.YES_NO_OPTION);
 			if (confirm == JOptionPane.YES_OPTION) {
-				db.deleteEmployeeData(employeeId);
+				db.deleteEmployeeData(employeeId, empName);
+
 				JOptionPane.showMessageDialog(null, "Employee deleted successfully.", "Success",
 						JOptionPane.INFORMATION_MESSAGE);
 				// Refresh table to reflect changes
@@ -336,26 +340,25 @@ public class EMPListPanel extends JPanel {
 	}
 
 	private void refreshTable() {
-
 		try {
 			FlatAnimatedLafChange.showSnapshot();
-
 			ResultSet rs = db.getAllData();
 			DefaultTableModel model = (DefaultTableModel) table.getModel();
-			model.setRowCount(0);
+			model.setRowCount(0); // Clear the existing rows
+
 			while (rs.next()) {
 				Object[] row = { rs.getInt("id"), rs.getString("first_name"), rs.getString("last_name"),
 						rs.getString("address"), rs.getString("work_type"), rs.getDouble("rate"),
 						rs.getDouble("grossPay"), rs.getDouble("netPay") };
-				System.out.println(rs.getDouble("netPay"));
-				model.addRow(row);
+				model.addRow(row); // Add the row to the table
 			}
+
+			// Update calculations after fetching all data
 			calculatePay();
 			FlatAnimatedLafChange.hideSnapshotWithAnimation();
 
 		} catch (SQLException e) {
-			e.printStackTrace();
-			JOptionPane.showMessageDialog(null, "Failed to refresh employee data " + e.getMessage(), "Error",
+			JOptionPane.showMessageDialog(null, "Failed to refresh employee data: " + e.getMessage(), "Error",
 					JOptionPane.ERROR_MESSAGE);
 		}
 	}

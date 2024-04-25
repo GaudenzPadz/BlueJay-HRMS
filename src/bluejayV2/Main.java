@@ -27,7 +27,7 @@ public class Main {
 		try {
 			DB = new EmployeeDatabase();
 
-			frame = new GUI("Title", new LoginPanel(), 1200, 700, true, true);
+			frame = new GUI("Login", new LoginPanel(), 1200, 700, true, true);
 			frame.isDark(false);
 
 		} catch (SQLException | ClassNotFoundException e) {

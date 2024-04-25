@@ -46,9 +46,9 @@ public class BundyClockAttendanceSystem extends JFrame {
             }
         });
     }
-    String employeeName;
+
     private void clockIn() {
-         employeeName = JOptionPane.showInputDialog("Enter your name:");
+        String employeeName = JOptionPane.showInputDialog("Enter your name:");
         if (employeeName != null && !employeeName.trim().isEmpty()) {
             String currentTime = getCurrentTime();
             List<String> records = attendanceRecords.getOrDefault(employeeName, new ArrayList<>());
@@ -60,13 +60,18 @@ public class BundyClockAttendanceSystem extends JFrame {
     }
 
     private void clockOut() {
+        String employeeName = JOptionPane.showInputDialog("Enter your name:");
         if (employeeName != null && !employeeName.trim().isEmpty()) {
-            String currentTime = getCurrentTime();
-            List<String> records = attendanceRecords.getOrDefault(employeeName, new ArrayList<>());
-            records.add("Clock Out: " + currentTime);
-            attendanceRecords.put(employeeName, records);
-            updateStatus("Clocked Out at " + currentTime);
-            updateAttendanceTextArea();
+            List<String> records = attendanceRecords.get(employeeName);
+            if (records != null && !records.isEmpty() && records.get(records.size() - 1).startsWith("Clock In")) {
+                String currentTime = getCurrentTime();
+                records.add("Clock Out: " + currentTime);
+                attendanceRecords.put(employeeName, records);
+                updateStatus("Clocked Out at " + currentTime);
+                updateAttendanceTextArea();
+            } else {
+                updateStatus("Error: No clock in record found for " + employeeName);
+            }
         }
     }
 
@@ -88,7 +93,11 @@ public class BundyClockAttendanceSystem extends JFrame {
 
     private String getCurrentTime() {
         Calendar cal = Calendar.getInstance();
-        return String.format("%02d:%02d:%02d", cal.get(Calendar.HOUR_OF_DAY), cal.get(Calendar.MINUTE), cal.get(Calendar.SECOND));
+        int hour = cal.get(Calendar.HOUR);
+        int minute = cal.get(Calendar.MINUTE);
+        int second = cal.get(Calendar.SECOND);
+        String amOrPm = cal.get(Calendar.AM_PM) == Calendar.AM ? "AM" : "PM";
+        return String.format("%02d:%02d:%02d %s", hour, minute, second, amOrPm);
     }
 
     public static void main(String[] args) {
