@@ -1,4 +1,4 @@
-package bluejay;
+package bluejayV2;
 
 import java.sql.Date;
 
@@ -12,7 +12,7 @@ public class Employee {
 	private String lastName;
 	private String address;
 	private String workType;
-	private double rate;
+	private double basicSalary;
 	private double grossPay;
 	private double netPay;
 	private String gender;
@@ -29,30 +29,28 @@ public class Employee {
 	private String email;
 	private Date dateHired;
 	private ImageIcon profileImage;
-
+	private String department;
+	private double ratePerDay;
 
 	public Employee() {
 
 	}
 
-	public Employee(int id, String firstName, String middleName, String lastName, String address, String workType, double rate,
-			double grossPay, double netPay, String gender) {
+	public Employee(int id, String firstName, String lastName, String address, String department,
+			String workType, double basicSalary, double grossPay, double netPay, String gender) {
 		// Initialize
 		this.id = id;
 		this.firstName = firstName;
 		this.middleName = middleName;
 		this.lastName = lastName;
 		this.address = address;
+		this.department = department;
 		this.workType = workType;
-		this.rate = rate;
+		this.basicSalary = basicSalary;
 		this.grossPay = grossPay;
 		this.netPay = netPay;
 		this.gender = gender;
-		this.email = email;
-		this.middleName = middleName;
-		// this.DOB = DOB
-		this.telNumber = telNumber;
-
+		
 		this.absents = 0;
 		this.late = 0;
 		this.dayOff = 0;
@@ -62,6 +60,11 @@ public class Employee {
 	// GETTERS
 	public int getId() {
 		return id;
+	}
+
+	public String getDepartment() {
+
+		return department;
 	}
 
 	public String getFirstName() {
@@ -84,8 +87,8 @@ public class Employee {
 		return workType;
 	}
 
-	public double getRate() {
-		return rate;
+	public double getBasicSalary() {
+		return basicSalary;
 	}
 
 	public String getGender() {
@@ -144,6 +147,11 @@ public class Employee {
 		return dateHired;
 	}
 
+	public double getRatePerDay() {
+
+		return ratePerDay;
+	}
+
 	// SETTERS
 	public void setId(int id) {
 		this.id = id;
@@ -169,8 +177,8 @@ public class Employee {
 		this.workType = workType;
 	}
 
-	public void setRate(double rate) {
-		this.rate = rate;
+	public void setBasicSalary(double basicSalary) {
+		this.basicSalary = basicSalary;
 	}
 
 	public void setGrossPay(double grossPay) {
@@ -236,13 +244,18 @@ public class Employee {
 	public void setDaysWorked(double daysWorked) {
 		this.daysWorked = daysWorked;
 	}
-	public ImageIcon getProfileImage() {
-        return profileImage;
-    }
 
-    public void setProfileImage(byte[] imageData) {
-        this.profileImage = new ImageIcon(imageData);
-    }
+	public ImageIcon getProfileImage() {
+		return profileImage;
+	}
+
+	public void setProfileImage(byte[] imageData) {
+		if (imageData != null) {
+			this.profileImage = new ImageIcon(imageData);
+		} else {
+			this.profileImage = null; // Handle null image
+		}
+	}
 
 	// METHODS TO CALCULATE
 
@@ -250,7 +263,7 @@ public class Employee {
 	public double totalDeductions() {
 		return getPAG_IBIG() + getPHILHEALTH() + getSSS();
 	}
-	
+
 	// Method to calculate gross pay
 	public double calculateGrossPay(double daysWorked, double wagePerDay) {
 		return daysWorked * wagePerDay;
@@ -259,6 +272,17 @@ public class Employee {
 	// Method to calculate net pay
 	public double calculateNetPay(double grossPay, double deductions) {
 		return grossPay - deductions;
+	}
+
+	public void setDepartment(String string) {
+
+		this.department = string;
+
+	}
+
+	public void setRatePerDay(double double1) {
+
+		this.ratePerDay = double1;
 	}
 
 }

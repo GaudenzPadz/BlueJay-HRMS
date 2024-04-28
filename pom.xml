@@ -14,7 +14,6 @@
 			<version>3.7.2</version>
 		</dependency>
 
-		<!-- https://www.formdev.com/flatlaf/ -->
 		<dependency>
 			<groupId>com.formdev</groupId>
 			<artifactId>flatlaf</artifactId>
@@ -33,8 +32,7 @@
 			<artifactId>jdatepicker</artifactId>
 			<version>1.3.4</version>
 		</dependency>
-		
-		<!-- https://mvnrepository.com/artifact/com.miglayout/miglayout-swing -->
+
 		<dependency>
 			<groupId>com.miglayout</groupId>
 			<artifactId>miglayout-swing</artifactId>

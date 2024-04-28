@@ -6,8 +6,7 @@ import java.awt.Font;
 import java.awt.Image;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.sql.ResultSet;
-import java.sql.SQLException;
+import java.sql.Time;
 import java.time.LocalDate;
 import java.util.Calendar;
 
@@ -32,8 +31,8 @@ import javax.swing.text.PlainDocument;
 import com.formdev.flatlaf.FlatClientProperties;
 import com.formdev.flatlaf.extras.FlatAnimatedLafChange;
 
-import bluejay.Employee;
 import bluejayDB.EmployeeDatabase;
+import bluejayV2.Employee;
 import bluejayV2.Main;
 import net.miginfocom.swing.MigLayout;
 
@@ -41,10 +40,7 @@ public class AttendanceForm extends JPanel {
 
 	private static final long serialVersionUID = 1L;
 	private Employee employee;
-
-	private JTextField hoursField_1;
-	private JTextField minutesField_1;
-	JComboBox<String> comboBox_1, AmPmCombo;
+	JComboBox<String> AmPmCombo;
 	private String[] column = { "Name", "Date", "Time In", "Time Out", "Overtime", "Note" };
 
 	private DefaultTableModel model = new DefaultTableModel(column, 0) {
@@ -57,41 +53,39 @@ public class AttendanceForm extends JPanel {
 	};
 
 	private JTable table;
-	private JTextField hourField, minutesField, hoursOTField;
-	private JButton timeINBtn, timeOUTBtn;
-	private EmployeeDatabase DB;
+	private EmployeeDatabase db;
 	private String currentDate = LocalDate.now().toString(); // Current date as a string
-	private JTextArea noteArea;
-	private JCheckBox OTcheck;
+	private JTextField INhourField;
+	private JTextField INminutesField;
+	private JTextField OUThoursField;
+	private JTextField OUTminutesField;
+	private JComboBox<String> OUTcomboBox;
+	private JComboBox<String> AmPmOUTCombo;
 
-	public AttendanceForm(Employee employee) {
+	public AttendanceForm(Employee employee, EmployeeDatabase DB) {
 		this.employee = employee;
-		try {
-			DB = new EmployeeDatabase();
-			refreshTable();
 
-		} catch (SQLException | ClassNotFoundException e) {
-			e.printStackTrace();
-		}
+		this.db = DB;
+		refreshTable(model);
 
-		if (DB.hasCheckedIn(employee.getId(), currentDate)) {
+		if (db.hasCheckedIn(employee.getId(), currentDate)) {
 			// if employee already time in
-			showTimeOutButton();
+			setupUI(attendanceOUTForm());
 		} else {
 			// if new login
-			showTimeInButton();
+			setupUI(attendanceForm());
+
 		}
-		setupUI();
+
 	}
 
-	private void refreshTable() {
+	private void refreshTable(DefaultTableModel modely) {
 		FlatAnimatedLafChange.showSnapshot();
-		model.setRowCount(0);
-		DB.loadAttendanceData(employee.getId(), model);
+		db.loadEMPAttendanceData(employee.getId(), modely);
 		FlatAnimatedLafChange.hideSnapshotWithAnimation();
 	}
 
-	private void setupUI() {
+	private void setupUI(JPanel form) {
 		// Set layout
 		setLayout(new BorderLayout());
 
@@ -110,7 +104,7 @@ public class AttendanceForm extends JPanel {
 		btnNewButton.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				Main.frame.replaceContentPane("Weld Well HRMS", new EmployeePanel(employee), getLayout());
+				Main.frame.replaceContentPane("Weld Well HRMS", new EmployeePanel(employee, db), getLayout());
 			}
 		});
 
@@ -123,9 +117,9 @@ public class AttendanceForm extends JPanel {
 
 		JPanel mainPanel = new JPanel(new MigLayout("fill,insets 20", "[center]", "[center][center]"));
 		add(mainPanel, BorderLayout.CENTER);
+		JPanel attendanceform = form;
 
-		JPanel attForm = attendanceForm();
-		mainPanel.add(attForm, "cell 0 0,alignx center,aligny center");
+		mainPanel.add(attendanceform, "cell 0 0,alignx center,aligny center");
 
 		JPanel attTable = attendanceTable();
 		mainPanel.add(attTable, "cell 0 1,growx");
@@ -134,7 +128,7 @@ public class AttendanceForm extends JPanel {
 
 	private JPanel attendanceForm() {
 		JPanel attendanceForm = new JPanel(new MigLayout("wrap,fillx,insets 25 35 25 35",
-				"[200px,center][30px][][200px]", "[][20.00][][][][][][]"));
+				"[200px,center][100px][200px]", "[center][20.00][20px][20px][20px][][20px][20px][20px][20px][20px][]"));
 		attendanceForm.putClientProperty(FlatClientProperties.STYLE,
 				"arc:20;" + "[light]background:darken(@background,3%);" + "[dark]background:lighten(@background,3%)");
 
@@ -142,9 +136,12 @@ public class AttendanceForm extends JPanel {
 		JLabel lblTimeIn = new JLabel("Time In");
 		attendanceForm.add(lblTimeIn, "cell 0 0,alignx left");
 
+		JLabel noteLabel = new JLabel("Note");
+		attendanceForm.add(noteLabel, "cell 2 0,alignx center,aligny center");
+
 		// Hours Field
-		hourField = new JTextField(2);
-		hourField.setDocument(new PlainDocument() {
+		INhourField = new JTextField(2);
+		INhourField.setDocument(new PlainDocument() {
 			@Override
 			public void insertString(int offs, String str, AttributeSet a) throws BadLocationException {
 				if (Character.isDigit(str.charAt(0)) && getLength() < 2) {
@@ -152,15 +149,15 @@ public class AttendanceForm extends JPanel {
 				}
 			}
 		});
-		attendanceForm.add(hourField, "flowx,cell 0 1,alignx left");
+		attendanceForm.add(INhourField, "flowx,cell 0 1,alignx left");
 
 		// Colon Label
 		JLabel colon = new JLabel(":");
 		attendanceForm.add(colon, "cell 0 1");
 
 		// Minutes Field
-		minutesField = new JTextField(2);
-		minutesField.setDocument(new PlainDocument() {
+		INminutesField = new JTextField(2);
+		INminutesField.setDocument(new PlainDocument() {
 			@Override
 			public void insertString(int offs, String str, AttributeSet a) throws BadLocationException {
 				if (Character.isDigit(str.charAt(0)) && getLength() < 2) {
@@ -168,20 +165,20 @@ public class AttendanceForm extends JPanel {
 				}
 			}
 		});
-		attendanceForm.add(minutesField, "cell 0 1");
+		attendanceForm.add(INminutesField, "cell 0 1");
 
 		// AM/PM ComboBox
 		AmPmCombo = new JComboBox<>(new String[] { "AM", "PM" });
 		attendanceForm.add(AmPmCombo, "cell 0 1");
 
 		// Set current time to Time In fields
-		setCurrentTimeToFields();
+		setCurrentTimeToFields(INhourField, INminutesField);
 		ActionListener updateExpectedTimeOut = new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				try {
-					int hours = Integer.parseInt(hourField.getText());
-					int minutes = Integer.parseInt(minutesField.getText());
+					int hours = Integer.parseInt(INhourField.getText());
+					int minutes = Integer.parseInt(INminutesField.getText());
 					String ampm = (String) AmPmCombo.getSelectedItem();
 
 					if (ampm.equals("PM") && hours < 12) {
@@ -202,9 +199,10 @@ public class AttendanceForm extends JPanel {
 						hours -= 12;
 					}
 
-					hoursField_1.setText(String.format("%02d", hours)); // Update Expected Time Out
-					minutesField_1.setText(String.format("%02d", minutes));
-					comboBox_1.setSelectedItem(expectedTimeOutAmpm);
+					// expected out fields/Update Expected Time Out
+					OUThoursField.setText(String.format("%02d", hours));
+					OUTminutesField.setText(String.format("%02d", minutes));
+					OUTcomboBox.setSelectedItem(expectedTimeOutAmpm);
 
 				} catch (NumberFormatException ex) {
 					JOptionPane.showMessageDialog(null, "Invalid time format. Please enter valid hours and minutes.");
@@ -213,63 +211,160 @@ public class AttendanceForm extends JPanel {
 		};
 
 		// Attach the action listener to the Time In components
-		hourField.addActionListener(updateExpectedTimeOut);
-		minutesField.addActionListener(updateExpectedTimeOut);
+		INhourField.addActionListener(updateExpectedTimeOut);
+		INminutesField.addActionListener(updateExpectedTimeOut);
 		AmPmCombo.addActionListener(updateExpectedTimeOut);
 
-		JLabel lblHowManyHours = new JLabel("How many Hours? :");
-		lblHowManyHours.setEnabled(false);
-		attendanceForm.add(lblHowManyHours, "flowx,cell 3 1,alignx left");
-
-		hoursOTField = new JTextField();
-		hoursOTField.setEnabled(false);
-		attendanceForm.add(hoursOTField, "cell 3 1");
-		hoursOTField.setColumns(5);
-		OTcheck = new JCheckBox("Overtime?");
-		OTcheck.addActionListener((ActionEvent e) -> {
-			boolean selected = OTcheck.isSelected();
-			lblHowManyHours.setEnabled(selected);
-			hoursOTField.setEnabled(selected);
-		});
-		if (OTcheck.isSelected()) {
-			lblHowManyHours.setEnabled(true);
-			hoursOTField.setEnabled(true);
-		} else {
-			hoursOTField.setEnabled(false);
-			lblHowManyHours.setEnabled(false);
-		}
-		attendanceForm.add(OTcheck, "cell 3 0");
-
-		JLabel noteLabel = new JLabel("Note");
-		attendanceForm.add(noteLabel, "cell 3 2,alignx center,aligny center");
-
-		noteArea = new JTextArea();
-		noteArea.setLineWrap(true);
-		attendanceForm.add(noteArea, "cell 3 3 1 2,grow");
-
-		JButton timeINBtn = showTimeInButton();
-		attendanceForm.add(timeINBtn, "cell 3 6,alignx center,aligny center");
+		JTextArea clockINnote = new JTextArea();
+		clockINnote.setLineWrap(true);
+		attendanceForm.add(clockINnote, "cell 2 1 1 7,grow");
 
 		// Expected Time Out Label
 		JLabel expectedOutLabel = new JLabel("Expected Time Out");
 		attendanceForm.add(expectedOutLabel, "cell 0 3,alignx left");
 
 		// Expected Time Out Hours Field
-		hoursField_1 = new JTextField(2); // Two digits for hours
-		attendanceForm.add(hoursField_1, "flowx,cell 0 4,alignx left");
+		OUThoursField = new JTextField(2); // Two digits for hours
+		attendanceForm.add(OUThoursField, "flowx,cell 0 4,alignx left");
 
 		// Colon Label for Expected Time Out
-		JLabel colonLabel2 = new JLabel(":");
-		attendanceForm.add(colonLabel2, "cell 0 4");
+		attendanceForm.add(new JLabel(":"), "cell 0 4");
 
 		// Expected Time Out Minutes Field
-		minutesField_1 = new JTextField(2); // Two digits for minutes
-		attendanceForm.add(minutesField_1, "cell 0 4");
+		OUTminutesField = new JTextField(2); // Two digits for minutes
+		attendanceForm.add(OUTminutesField, "cell 0 4");
 
 		// Expected Time Out AM/PM ComboBox
-		comboBox_1 = new JComboBox<>(new String[] { "AM", "PM" });
-		attendanceForm.add(comboBox_1, "cell 0 4");
+		OUTcomboBox = new JComboBox<>(new String[] { "AM", "PM" });
+		attendanceForm.add(OUTcomboBox, "cell 0 4");
+
+		JButton timeINBtn = new JButton("Time In");
+		timeINBtn.addActionListener(e -> {
+			try {
+				// Extract time components
+				int hours = Integer.parseInt(INhourField.getText());
+				int minutes = Integer.parseInt(INminutesField.getText());
+				String ampm = (String) AmPmCombo.getSelectedItem();
+
+				// Convert to 24-hour format
+				if (ampm.equals("PM") && hours < 12) {
+					hours += 12;
+				} else if (ampm.equals("AM") && hours == 12) {
+					hours = 0; // Midnight is 0
+				}
+
+				// Validate hour and minute ranges
+				if (hours < 0 || hours > 23 || minutes < 0 || minutes > 59) {
+					throw new IllegalArgumentException("Invalid time format.");
+				}
+
+				// Create time string in HH:MM:SS format
+				String timeInStr = String.format("%02d:%02d:00", hours, minutes);
+				Time timeInObj = Time.valueOf(timeInStr); // Now safe to convert
+
+				// Additional note
+				String note = clockINnote.getText();
+
+				// Insert into the database
+				db.addTimeIn(employee.getId(), employee.getFirstName() + " " + employee.getLastName(), currentDate,
+						timeInObj, note);
+
+				// Display success message and refresh table
+				JOptionPane.showMessageDialog(this, "Time In recorded.");
+				refreshTable(model);
+
+			} catch (NumberFormatException ex) {
+				JOptionPane.showMessageDialog(this, "Please enter valid numbers for hours and minutes.", "Input Error",
+						JOptionPane.ERROR_MESSAGE);
+			} catch (IllegalArgumentException ex) {
+				JOptionPane.showMessageDialog(this, ex.getMessage(), "Format Error", JOptionPane.ERROR_MESSAGE);
+			}
+		});
+
+		attendanceForm.add(timeINBtn, "cell 1 10,growx");
+
 		return attendanceForm;
+	}
+
+	private JPanel attendanceOUTForm() {
+		JPanel attendanceOUTForm = new JPanel(
+				new MigLayout("wrap,fillx,insets 25 35 25 35", "[200px,grow,center][100px][200px]",
+						"[pref!,center][pref!][pref!][pref!][pref!][pref!][pref!][pref!][pref!,grow]"));
+		attendanceOUTForm.putClientProperty(FlatClientProperties.STYLE,
+				"arc:20;" + "[light]background:darken(@background,3%);" + "[dark]background:lighten(@background,3%)");
+
+		attendanceOUTForm.add(new JLabel("Time Out"), "cell 0 0,alignx left");
+
+		attendanceOUTForm.add(new JLabel("Note"), "cell 2 0,alignx center,aligny center");
+
+		// Hours Field
+		JTextField hourOUTField = new JTextField(2);
+		hourOUTField.setDocument(new PlainDocument() {
+			@Override
+			public void insertString(int offs, String str, AttributeSet a) throws BadLocationException {
+				if (Character.isDigit(str.charAt(0)) && getLength() < 2) {
+					super.insertString(offs, str, a);
+				}
+			}
+		});
+		attendanceOUTForm.add(hourOUTField, "flowx,cell 0 1,alignx left");
+
+		attendanceOUTForm.add(new JLabel(":"), "cell 0 1");
+
+		// Minutes Field
+		JTextField minutesOUTField = new JTextField(2);
+		minutesOUTField.setDocument(new PlainDocument() {
+			@Override
+			public void insertString(int offs, String str, AttributeSet a) throws BadLocationException {
+				if (Character.isDigit(str.charAt(0)) && getLength() < 2) {
+					super.insertString(offs, str, a);
+				}
+			}
+		});
+		attendanceOUTForm.add(minutesOUTField, "cell 0 1");
+
+		// AM/PM ComboBox
+		AmPmOUTCombo = new JComboBox<>(new String[] { "AM", "PM" });
+		attendanceOUTForm.add(AmPmOUTCombo, "cell 0 1");
+
+		// Set current time to Time In fields
+		setCurrentTimeToFields(hourOUTField, minutesOUTField);
+
+		JTextArea clockOUTnote = new JTextArea();
+		clockOUTnote.setLineWrap(true);
+		attendanceOUTForm.add(clockOUTnote, "cell 2 1 1 6,grow");
+
+		JCheckBox OTcheck = new JCheckBox("Overtime?");
+		attendanceOUTForm.add(OTcheck, "flowx,cell 0 3,alignx left");
+
+		JLabel howCome = new JLabel("How Many Hours? ");
+		attendanceOUTForm.add(howCome, "flowx,cell 0 4,alignx left");
+
+		JTextField OTINhourField = new JTextField();
+		attendanceOUTForm.add(OTINhourField, "cell 0 4,alignx right");
+		OTINhourField.setColumns(5);
+		if (OTcheck.isSelected()) {
+			howCome.setEnabled(true);
+			OTINhourField.setEnabled(true);
+		} else {
+			howCome.setEnabled(false);
+			OTINhourField.setEnabled(false);
+		}
+
+		JButton OUTBtn = new JButton("Time Out");
+		OUTBtn.addActionListener(e -> {
+			String timeOut = hourOUTField.getText() + ":" + minutesOUTField.getText() + " "
+					+ AmPmOUTCombo.getSelectedItem();
+
+			int overtime = OTcheck.isSelected() ? Integer.parseInt(OTINhourField.getText()) : 0;
+			String note = clockOUTnote.getText();
+
+			db.updateTimeOut(employee.getId(), currentDate, timeOut, note, overtime);
+
+			JOptionPane.showMessageDialog(this, "Time Out recorded.");
+		});
+		attendanceOUTForm.add(OUTBtn, "cell 1 8,growx");
+		return attendanceOUTForm;
 	}
 
 	private JPanel attendanceTable() {
@@ -294,42 +389,21 @@ public class AttendanceForm extends JPanel {
 		return panel;
 	}
 
-	private void setCurrentTimeToFields() {
+	private void setCurrentTimeToFields(JTextField hour, JTextField minutesField) {
 		Calendar now = Calendar.getInstance();
 		int hours = now.get(Calendar.HOUR);
 		int minutes = now.get(Calendar.MINUTE);
 		boolean isPM = now.get(Calendar.AM_PM) == Calendar.PM;
 
-		hourField.setText(String.format("%02d", hours));
+		hour.setText(String.format("%02d", hours));
 		minutesField.setText(String.format("%02d", minutes));
-		AmPmCombo.setSelectedItem(isPM ? "PM" : "AM");
+		if (this.AmPmCombo == null) {
+			AmPmOUTCombo.setSelectedItem(isPM ? "PM" : "AM");
+
+		} else if (this.AmPmOUTCombo == null) {
+			AmPmCombo.setSelectedItem(isPM ? "PM" : "AM");
+
+		}
 	}
 
-	private JButton showTimeInButton() {
-		timeINBtn = new JButton("Time In");
-		timeINBtn.addActionListener(e -> {
-			String timeIn = hourField.getText() + ":" + minutesField.getText() + " " + AmPmCombo.getSelectedItem();
-			// public void insertAttendance(int employeeId, String date, String timeIn,
-			// String overtime, String note) {
-			DB.insertAttendance(employee.getId(), employee.getFirstName() + " " + employee.getLastName(), currentDate,
-					timeIn, hoursOTField.getText(), noteArea.getText());
-
-			JOptionPane.showMessageDialog(this, "Time In recorded.");
-			refreshTable();
-		});
-
-		// Add the button to your UI
-		return timeINBtn;
-	}
-
-	private void showTimeOutButton() {
-		timeOUTBtn = new JButton("Time Out");
-		timeOUTBtn.addActionListener(e -> {
-			String timeOut = hourField.getText() + ":" + minutesField.getText() + " " + AmPmCombo.getSelectedItem();
-			DB.updateTimeOut(employee.getId(), currentDate, timeOut);
-
-			JOptionPane.showMessageDialog(this, "Time Out recorded.");
-		});
-
-	}
 }

@@ -247,7 +247,7 @@ public class RoundDigitalClock extends JFrame {
 		EventQueue.invokeLater(new Runnable() {
 			@Override
 			public void run() {
-//				new RoundDigitalClock().setVisible(true);
+				new RoundDigitalClock().setVisible(true);
 				new Window();
 			}
 		});

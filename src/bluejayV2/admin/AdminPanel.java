@@ -1,14 +1,11 @@
 package bluejayV2.admin;
 
 import java.awt.BorderLayout;
-import java.awt.Color;
 import java.awt.Font;
 import java.awt.GridLayout;
 import java.awt.Image;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
 
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
@@ -17,6 +14,7 @@ import javax.swing.JPanel;
 
 import com.formdev.flatlaf.FlatClientProperties;
 
+import bluejayDB.EmployeeDatabase;
 import bluejayV2.LoginPanel;
 import bluejayV2.Main;
 import net.miginfocom.swing.MigLayout;
@@ -35,8 +33,12 @@ public class AdminPanel extends JPanel {
 	public ImageIcon payrollIcon = new ImageIcon(getClass().getResource("/images/payroll.png"));
 	public ImageIcon userIcon = new ImageIcon(getClass().getResource("/images/user.png"));
 	public ImageIcon logoutIcon = new ImageIcon(getClass().getResource("/images/logout.png"));
+	private ImageIcon attendanceIcon  = new ImageIcon(getClass().getResource("/images/attendance.png"));
 
-	public AdminPanel() {
+	private EmployeeDatabase DB;
+
+	public AdminPanel(EmployeeDatabase DB) {
+		this.DB = DB;
 		setLayout(new BorderLayout(5, 0));
 
 		// intialize panels
@@ -62,7 +64,7 @@ public class AdminPanel extends JPanel {
 	private JPanel SidePanel() {
 
 		// Initialize side panel
-		JPanel panel = new JPanel(new MigLayout("", "[left][60.00]", "[top][][][][][][][]"));
+		JPanel panel = new JPanel(new MigLayout("", "[left][60.00]", "[top][][][][][][][][][][]"));
 
 		// Set arc round background for the side panel
 		putClientProperty(FlatClientProperties.STYLE,
@@ -82,19 +84,20 @@ public class AdminPanel extends JPanel {
 		titlePanel.add(iconLabel);
 		titlePanel.add(textPanel);
 
-		JButton menuBtn = new JButton();
-		panel.add(menuBtn, "cell 0 1,alignx left,aligny center");
-		menuBtn.setOpaque(false);
-		menuBtn.setContentAreaFilled(false);
-		menuBtn.setBorderPainted(false);
-		menuBtn.setIcon(new ImageIcon(menuIcon.getImage().getScaledInstance(35, 35, Image.SCALE_SMOOTH)));
-		menuBtn.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				// close and open the side menu
-				sideMenu.toggleMenuWithAnimation();
-			}
-		});
+		//a buttton to close / open the side panel
+//		JButton menuBtn = new JButton();
+//		panel.add(menuBtn, "cell 0 1,alignx left,aligny center");
+//		menuBtn.setOpaque(false);
+//		menuBtn.setContentAreaFilled(false);
+//		menuBtn.setBorderPainted(false);
+//		menuBtn.setIcon(new ImageIcon(menuIcon.getImage().getScaledInstance(35, 35, Image.SCALE_SMOOTH)));
+//		menuBtn.addActionListener(new ActionListener() {
+//			@Override
+//			public void actionPerformed(ActionEvent e) {
+//				// close and open the side menu
+//				sideMenu.toggleMenuWithAnimation();
+//			}
+//		});
 
 		JButton homeBtn = new JButton();
 		panel.add(homeBtn, "cell 0 2");
@@ -129,7 +132,7 @@ public class AdminPanel extends JPanel {
 				// Show Panel 1
 				mainPanel.removeAll();
 				mainPanel.setLayout(new BorderLayout());
-				mainPanel.add(new EMPListPanel(), BorderLayout.CENTER);
+				mainPanel.add(new EMPListPanel(DB), BorderLayout.CENTER);
 				mainPanel.revalidate();
 				mainPanel.repaint();
 			}
@@ -146,13 +149,12 @@ public class AdminPanel extends JPanel {
 		addEMPBtn.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				// Show Panel 2
 				mainPanel.removeAll();
 				mainPanel.setLayout(new MigLayout("", "[grow]", "[grow][grow,center]"));
 				JLabel titleLabel = new JLabel("Add Employee");
 				titleLabel.setFont(new Font("SansSerif", Font.BOLD, 20));
 				mainPanel.add(titleLabel, "cell 0 0,alignx leading,aligny center");
-				mainPanel.add(new AddEMPPanel(), "cell 0 1,grow");
+				mainPanel.add(new AddEMPPanel(DB), "cell 0 1,grow");
 				mainPanel.revalidate();
 				mainPanel.repaint();
 			}
@@ -169,19 +171,38 @@ public class AdminPanel extends JPanel {
 		payrollBtn.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				// Show Panel 3
 				mainPanel.removeAll();
 				mainPanel.setLayout(new BorderLayout());
-				mainPanel.add(new JLabel("Panel 3 content"));
+				mainPanel.add(new PayrollPanel(DB), BorderLayout.CENTER);
 				mainPanel.revalidate();
 				mainPanel.repaint();
 			}
 		});
 		JLabel label_2 = new JLabel("Payroll");
 		panel.add(label_2, "cell 1 5");
+		
+		JButton attendanceBtn = new JButton("");
+		attendanceBtn.setOpaque(false);
+		attendanceBtn.setContentAreaFilled(false);
+		attendanceBtn.setBorderPainted(false);
+		attendanceBtn.setIcon(new ImageIcon(attendanceIcon.getImage().getScaledInstance(35, 35, Image.SCALE_SMOOTH)));
+		attendanceBtn.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				mainPanel.removeAll();
+				mainPanel.setLayout(new BorderLayout());
+				mainPanel.add(new AttendancePanel(DB), BorderLayout.CENTER);
+				mainPanel.revalidate();
+				mainPanel.repaint();
+			}
+		});
+		panel.add(attendanceBtn, "cell 0 6");
+		
+		JLabel attendanceLabel = new JLabel("Attendance");
+		panel.add(attendanceLabel, "cell 1 6");
 
 		JButton logoutBtn = new JButton();
-		panel.add(logoutBtn, "cell 0 7");
+		panel.add(logoutBtn, "cell 0 10");
 		logoutBtn.setOpaque(false);
 		logoutBtn.setContentAreaFilled(false);
 		logoutBtn.setBorderPainted(false);
@@ -189,11 +210,11 @@ public class AdminPanel extends JPanel {
 		logoutBtn.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				Main.frame.replaceContentPane("Login",new LoginPanel(), new BorderLayout());
+				Main.frame.replaceContentPane("Login",new LoginPanel(DB), new BorderLayout());
 			}
 		});
 		JLabel logoutLabel = new JLabel("Logout");
-		panel.add(logoutLabel, "cell 1 7");
+		panel.add(logoutLabel, "cell 1 10");
 
 		titlePanel.putClientProperty(FlatClientProperties.STYLE,
 				"arc:20; [light]background:darken(@background,5%); [dark]background:lighten(@background,5%)");

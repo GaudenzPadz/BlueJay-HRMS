@@ -2,8 +2,10 @@ package bluejayV2;
 
 import java.awt.Dimension;
 import java.awt.EventQueue;
+import java.awt.Image;
 import java.awt.LayoutManager;
 
+import javax.swing.ImageIcon;
 import javax.swing.JComponent;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
@@ -15,17 +17,35 @@ import com.formdev.flatlaf.FlatLightLaf;
 import com.formdev.flatlaf.extras.FlatAnimatedLafChange;
 
 public class GUI extends JFrame {
+	private ImageIcon logo;
+	private ImageIcon scaledLogo;
 
 	public GUI(String title, JComponent contentPanel, int width, int height, boolean resize, boolean visible) {
-			setSize(width, height);
-			setTitle(title);
-			setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-			setResizable(resize);
-			setLocationRelativeTo(null); // Center on screen
-			setContentPane(contentPanel);
-			setVisible(visible);
-			setMinimumSize(new Dimension(width - 300, height - 200));
-		
+		super(title); // Use super constructor for JFrame initialization
+
+		setSize(width, height);
+		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		setResizable(resize);
+		setLocationRelativeTo(null); // Center on screen
+		setContentPane(contentPanel);
+		setVisible(visible);
+		setMinimumSize(new Dimension(width - 300, height - 200));
+
+		// Load logo using getResource (assuming logo.png is in the same package)
+		logo = new ImageIcon(getClass().getResource("/images/logo.png"));
+		setIconImage(logo.getImage()); // Set logo for the frame
+	}
+
+	public void setScaledLogo(int width, int height) {
+		scaledLogo = new ImageIcon(logo.getImage().getScaledInstance(width, height, Image.SCALE_SMOOTH));
+	}
+
+	public ImageIcon getOriginalLogo() {
+		return logo; // Return original logo (unchanged)
+	}
+
+	public ImageIcon getScaledLogo() {
+		return scaledLogo;
 	}
 
 	// a method to be called and sets if light mode (FlatDarculaLaf) or dark mode

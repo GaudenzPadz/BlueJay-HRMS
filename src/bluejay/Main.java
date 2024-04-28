@@ -5,6 +5,7 @@ import java.sql.SQLException;
 import javax.swing.JOptionPane;
 
 import bluejayDB.EmployeeDatabase;
+import bluejayV2.Employee;
 
 public class Main {
 

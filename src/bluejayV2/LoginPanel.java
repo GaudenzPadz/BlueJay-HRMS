@@ -18,7 +18,6 @@ import javax.swing.SwingConstants;
 
 import com.formdev.flatlaf.FlatClientProperties;
 
-import bluejay.Employee;
 import bluejayDB.EmployeeDatabase;
 import bluejayV2.admin.AdminPanel;
 import bluejayV2.employee.EmployeePanel;
@@ -29,9 +28,10 @@ public class LoginPanel extends JPanel {
 	private static final long serialVersionUID = 1L;
 	private JTextField usernameField;
 	private JPanel passwordPanel;
+	private EmployeeDatabase DB;
 
-	public LoginPanel() {
-
+	public LoginPanel(EmployeeDatabase DB) {
+		this.DB = DB;
 		setLayout(new MigLayout("fill,insets 20", "[center]", "[center]"));
 
 		JPanel panel_1 = new JPanel(
@@ -128,43 +128,31 @@ public class LoginPanel extends JPanel {
 	}
 
 	public void processLogin(String inputUsername, String inputPassword) {
-	    try {
-	        Main.DB = new EmployeeDatabase();
-	    } catch (ClassNotFoundException | SQLException e) {
-	        e.printStackTrace();
-	        JOptionPane.showMessageDialog(null, "Database connection error!");
-	        return;
-	    }
-
-	    String username = inputUsername;
-	    String password = inputPassword;
-
-	    String loginResult = Main.DB.validateLogin(username, password);
-	    System.out.println(loginResult);
-	    if (loginResult.startsWith("Login successful!")) {
-	        if (loginResult.contains("ADMIN")) {
-	            Main.frame.replaceContentPane("Admin Panel",new AdminPanel(), new BorderLayout());
-
-	        } else if (loginResult.contains("Employee")) {
-	            Employee employee = Main.DB.getEmployeeDataByUsername(username);
-	            if (employee != null) {
-
-	                // Pass employee data to EmployeePanel
-	                Main.frame.replaceContentPane("Weld Well HRMS",new EmployeePanel(employee), new BorderLayout());
-	            } else {
-	                JOptionPane.showMessageDialog(null, "No employee data found for this user");
-	            }
-
-	        } else {
-	            System.out.println("Unexpected login result format: " + loginResult);
-	            JOptionPane.showMessageDialog(null, "Invalid username or password");
-	        }
-	    } else {
-	        // Handle failed login
-	        JOptionPane.showMessageDialog(null, "Invalid username or password");
-	    }
-
-	    Main.DB.closeConnection();
+		String username = inputUsername;
+		String password = inputPassword;
+	
+		String loginResult = DB.validateLogin(username, password);
+		System.out.println(loginResult);
+	
+		if (loginResult.startsWith("Login successful!")) {
+			if (loginResult.contains("ADMIN")) {
+				Main.frame.replaceContentPane("Admin Panel", new AdminPanel(DB), new BorderLayout());
+			} else if (loginResult.contains("Employee")) {
+				Employee employee = DB.getEmployeeDataByUsername(username);
+				if (employee != null) {
+					Main.frame.replaceContentPane("Weld Well HRMS", new EmployeePanel(employee, DB), new BorderLayout());
+				} else {
+					JOptionPane.showMessageDialog(null, "No employee data found for this user");
+				}
+			} else {
+				System.out.println("Unexpected login result format: " + loginResult);
+				JOptionPane.showMessageDialog(null, "Invalid username or password");
+			}
+		} else {
+			JOptionPane.showMessageDialog(null, "Invalid username or password");
+		}
+	
+		// Do not close the connection here, as it may be needed elsewhere in the application.
 	}
-
+	
 }

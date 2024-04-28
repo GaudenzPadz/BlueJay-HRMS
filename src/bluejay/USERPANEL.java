@@ -34,6 +34,7 @@ import javax.swing.border.TitledBorder;
 import javax.swing.table.DefaultTableModel;
 
 import bluejayDB.EmployeeDatabase;
+import bluejayV2.Employee;
 
 // calendar
 final class MonthPanel extends JPanel {
@@ -373,9 +374,9 @@ public class USERPANEL extends JPanel implements Runnable {
 			int overtimeValue = (int) overtime.getValue();
 
 			// Call method to insert attendance data into database
-			employeeDb.insertAttendanceData(firstNameField.getText(), sqlDate, timeIn, timeOut, overtimeValue);
+//			employeeDb.insertAttendanceData(firstNameField.getText(), sqlDate, timeIn, timeOut, overtimeValue);
 			// Read attendance data and update the table model
-			employeeDb.readAttendanceData((DefaultTableModel) attendanceTable.getModel());
+//			employeeDb.readAttendanceData((DefaultTableModel) attendanceTable.getModel());
 		});
 
 		inputPanel.add(addAttendanceButton);

@@ -8,28 +8,29 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 
 import javax.swing.BorderFactory;
+import javax.swing.Icon;
 import javax.swing.ImageIcon;
-import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
-import javax.swing.SwingUtilities;
 
-import bluejay.Employee;
+import bluejayDB.EmployeeDatabase;
 import bluejayV2.ButtonPanel;
+import bluejayV2.Employee;
+import bluejayV2.GUI;
 import bluejayV2.LoginPanel;
 import bluejayV2.Main;
 import net.miginfocom.swing.MigLayout;
-import javax.swing.Icon;
 
 public class EmployeePanel extends JPanel {
 
 	private static final long serialVersionUID = 1L;
 	private JPanel menuPanel;
 	private Employee employee;
+	private EmployeeDatabase db;
 
-	public EmployeePanel(Employee employee) {
+	public EmployeePanel(Employee employee, EmployeeDatabase DB) {
 		this.employee = employee;
-
+		this.db = DB;
 		setLayout(new BorderLayout());
 
 		// Header Panel
@@ -37,11 +38,11 @@ public class EmployeePanel extends JPanel {
 		headerPanel.setBackground(new Color(0, 191, 255));
 		headerPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
 		headerPanel.setLayout(new MigLayout("", "[30px][left][30][]", "[100px,grow,shrink 70]"));
-		ImageIcon logoIcon = new ImageIcon(getClass().getResource("/images/logo.png"));
 
 		// Icon Label
 		JLabel iconLabel = new JLabel();
-		iconLabel.setIcon(null);
+		Main.frame.setScaledLogo(100, 100);
+		iconLabel.setIcon(Main.frame.getScaledLogo());
 		iconLabel.setFont(new Font("SansSerif", Font.BOLD, 24));
 		iconLabel.setForeground(Color.WHITE);
 		headerPanel.add(iconLabel, "cell 1 0,alignx left,growy");
@@ -51,17 +52,23 @@ public class EmployeePanel extends JPanel {
 		labelsPanel.setOpaque(false);
 		JLabel label1 = new JLabel("Welcome!");
 		label1.setFont(new Font("SansSerif", Font.BOLD, 20));
-		JLabel label2 = new JLabel("");
-
-		label2.setText(employee.getFirstName() + " " + employee.getLastName());
-
-		label2.setFont(new Font("SansSerif", Font.PLAIN, 15));
-		JLabel label3 = new JLabel("Label 3");
-		JLabel label4 = new JLabel("Label 4");
 		label1.setForeground(Color.WHITE);
+
+		JLabel label2 = new JLabel("");
+		label2.setText(employee.getFirstName() + " " + employee.getLastName());
+		label2.setFont(new Font("SansSerif", Font.PLAIN, 15));
 		label2.setForeground(Color.WHITE);
+
+		JLabel label3 = new JLabel("Label 3");
+		label3.setText(employee.getDepartment());
+		label3.setFont(new Font("SansSerif", Font.PLAIN, 15));
 		label3.setForeground(Color.WHITE);
+
+		JLabel label4 = new JLabel("Label 4");
+		label4.setText(employee.getWorkType());
+		label4.setFont(new Font("SansSerif", Font.PLAIN, 15));
 		label4.setForeground(Color.WHITE);
+
 		labelsPanel.add(label1);
 		labelsPanel.add(label2);
 		labelsPanel.add(label3);
@@ -87,7 +94,7 @@ public class EmployeePanel extends JPanel {
 		profileCBtn.addMouseListener(new MouseAdapter() {
 			@Override
 			public void mouseClicked(MouseEvent e) {
-				Main.frame.replaceContentPane("Profile", new ProfilePanel(employee), getLayout());
+				Main.frame.replaceContentPane("Profile", new ProfilePanel(employee, db), getLayout());
 			}
 		});
 		menuPanel.add(profileCBtn, "cell 1 1,growx,aligny center");
@@ -99,34 +106,22 @@ public class EmployeePanel extends JPanel {
 		attendanceFormCBtn.addMouseListener(new MouseAdapter() {
 			@Override
 			public void mouseClicked(MouseEvent e) {
-				Main.frame.replaceContentPane("Attendance Form", new AttendanceForm(employee), getLayout());
+				Main.frame.replaceContentPane("Attendance Form", new AttendanceForm(employee, DB), getLayout());
 			}
 		});
 		menuPanel.add(attendanceFormCBtn, "cell 3 1,growx,aligny center");
 
-		ImageIcon payrollIcon = new ImageIcon(getClass().getResource("/images/96x96/calendar.png"));
+		ImageIcon printIcon = new ImageIcon(getClass().getResource("/images/96x96/invoice.png"));
 
-		ButtonPanel updateAttendanceCBtn = new ButtonPanel(Color.decode("#002C4B"), payrollIcon, "Check Attendancel",
-				"click to check Attendance");
-		updateAttendanceCBtn.addMouseListener(new MouseAdapter() {
+		ButtonPanel checkPayrollCBtn = new ButtonPanel(Color.decode("#002C4B"), printIcon, "Check Payroll",
+				"click to check Payroll");
+		checkPayrollCBtn.addMouseListener(new MouseAdapter() {
 			@Override
 			public void mouseClicked(MouseEvent e) {
 				System.out.println("Button 3 clicked!");
 			}
 		});
-		menuPanel.add(updateAttendanceCBtn, "cell 5 1,growx,aligny center");
-
-		ImageIcon printIcon = new ImageIcon(getClass().getResource("/images/96x96/invoice.png"));
-
-		JPanel checkPayrollCBtn = new ButtonPanel(Color.decode("#002C4B"), printIcon, "Check Payroll",
-				"click to check Payroll");
-		checkPayrollCBtn.addMouseListener(new MouseAdapter() {
-			@Override
-			public void mouseClicked(MouseEvent e) {
-//
-			}
-		});
-		menuPanel.add(checkPayrollCBtn, "cell 1 3,growx,aligny center");
+		menuPanel.add(checkPayrollCBtn, "cell 5 1,growx,aligny center");
 
 		ImageIcon logoutIcon = new ImageIcon(getClass().getResource("/images/logout.png"));
 
@@ -138,10 +133,17 @@ public class EmployeePanel extends JPanel {
 //
 			}
 		});
-		menuPanel.add(printPayrollCBtn, "cell 3 3,growx,aligny center");
+		menuPanel.add(printPayrollCBtn, "cell 1 3,growx,aligny center");
 
 		JPanel logoutCBtn = new ButtonPanel(Color.decode("#002C4B"), logoutIcon, "Logout", null);
-		menuPanel.add(logoutCBtn, "cell 5 3,grow");
+		logoutCBtn.addMouseListener(new MouseAdapter() {
+			@Override
+			public void mouseClicked(MouseEvent e) {
+				Main.frame.replaceContentPane("Login", new LoginPanel(DB), new BorderLayout());
+
+			}
+		});
+		menuPanel.add(logoutCBtn, "cell 3 3,grow");
 
 	}
 

@@ -1,19 +1,18 @@
-package testApp;
+package bluejayV2.admin;
 
 import java.awt.Component;
 import java.awt.Font;
+import java.awt.Point;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.sql.Date;
-import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
 import javax.swing.JButton;
 import javax.swing.JComboBox;
-import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
@@ -22,59 +21,62 @@ import javax.swing.JTable;
 import javax.swing.JTextField;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableCellRenderer;
+import javax.swing.table.TableColumnModel;
+import javax.swing.table.TableModel;
 
 import com.formdev.flatlaf.extras.FlatAnimatedLafChange;
 
 import bluejayDB.EmployeeDatabase;
 import bluejayV2.Employee;
 import net.miginfocom.swing.MigLayout;
+import javax.swing.ScrollPaneConstants;
 
-public class PayrollSystem extends JFrame {
+public class PayrollPanel extends JPanel {
+
+	private static final long serialVersionUID = 1L;
 	private JTextField tfEmployeeName, tfEmployeeDepartment, tfEmployeeWorkType, tfRatePerDay, tfDaysWorked,
 			tfOvertimeHours, tfGrossPay, tfOvertimeRate, tfDeductionsSSS, tfDeductionsPagIbig, tfDeductionsPhilHealth,
 			tfTotalDeductions, tfAdvanced, tfBonus, tfNetPay;
 	private JButton btnCalculate, btnClear;
 	private JTable payrollHistoryTable;
-	private DefaultTableModel tableModel = new DefaultTableModel(
-			new String[] { "Employee ID", "Name", "Department", "Work Type", "Gross Pay", "Rate Per Day", "Days Worked",
-					"Overtime Hours", "Bonus", "Total Deductions", "Net Pay" },
-			0);;
-	private EmployeeDatabase DB;
+	private EmployeeDatabase db;
 	private JTextField tfEmployeeID;
 	private JComboBox<String> employeeComboBox = new JComboBox<String>();
 	private List<Employee> employees;
 	private JTextField searchEMPField;
 	private JTable EMPListTable;
 	private DefaultTableModel EMPListModel;
+	private JScrollPane scrollToCalculationPane;
+	private JTextField textField;
+	private DefaultTableModel tableModel = new DefaultTableModel(
+			new String[] { "ID", "Name", "Department", "Work Type", "Gross Pay", "Rate Per Day",
+					"Days Worked", "Overtime Hours", "Bonus", "Total Deductions", "Net Pay" },
+			0);
+	
+	public PayrollPanel(EmployeeDatabase DB) {
+		this.db = DB;
+		employees = DB.getAllEmployees(); // Fetch all employees
 
-	public PayrollSystem() {
-		try {
-			DB = new EmployeeDatabase();
-			employees = DB.getAllEmployees(); // Fetch all employees
-		} catch (SQLException | ClassNotFoundException e) {
-			e.printStackTrace();
-			JOptionPane.showMessageDialog(this, "Error initializing payroll system: " + e.getMessage(),
-					"Initialization Error", JOptionPane.ERROR_MESSAGE);
-		}
+		// setLayout(new MigLayout("wrap, fillx, insets 25 35 25 35", "[center]",
+		// "[center][grow][][]"));
 
-		setupUI();
+		scrollToCalculationPane = new JScrollPane();
+		add(scrollToCalculationPane, "cell 0 0, grow");
+
+		JPanel mainPane = new JPanel(
+				new MigLayout("wrap, fillx, insets 25 35 25 35", "[center]", "[center][grow][][]"));
+		scrollToCalculationPane.setViewportView(mainPane);
+		// Set up the employee selector panel
+		JPanel selectEMP = setupEmployeeSelectorPanel();
+		mainPane.add(selectEMP, "growx");
+		// Set up the payroll calculation panel
+		JPanel payrollCalculationPanel = setupPayrollCalculationPanel();
+		mainPane.add(payrollCalculationPanel);
 	}
 
-	private void setupUI() {
-		setTitle("Payroll System");
-		setSize(955, 766);
-		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		getContentPane().setLayout(new MigLayout("wrap, fillx, insets 25 35 25 35", "[center]", "[center][grow][][]"));
-
-		setupEmployeeSelectorPanel();
-		setupPayrollCalculationPanel();
-
-		setVisible(true);
-	}
-
-	private void setupEmployeeSelectorPanel() {
-		JPanel selectEmployeePanel = new JPanel(new MigLayout("",
-				"[100px,grow,center][][][][][][][][][100px,grow,center]", "[center][][][][][100px][center]"));
+	private JPanel setupEmployeeSelectorPanel() {
+		JPanel selectEmployeePanel = new JPanel(
+				new MigLayout("", "[100px,grow,center][][][][grow][][][][][100px,grow,center]", "[center][][100px]"));
 
 		EMPListModel = new DefaultTableModel(
 				new String[] { "Employee ID", "First Name", "Last Name", "Department", "Work Type", "Select" }, 0);
@@ -84,7 +86,8 @@ public class PayrollSystem extends JFrame {
 		// Add a custom renderer for the "Select" button
 		EMPListTable.getColumn("Select").setCellRenderer(new TableCellRenderer() {
 			@Override
-			public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected,	boolean hasFocus, int row, int column) {
+			public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected,
+					boolean hasFocus, int row, int column) {
 				return new JButton("Select"); // The button for selection
 			}
 		});
@@ -110,48 +113,58 @@ public class PayrollSystem extends JFrame {
 		lblSelectEmployee.setFont(new Font("SansSerif", Font.BOLD, 20));
 		selectEmployeePanel.add(lblSelectEmployee, "cell 0 0 10 1,alignx center");
 
-		selectEmployeePanel.add(empListScrollPane, "cell 0 1 10 5, growx");
+		JLabel lblNewLabel = new JLabel("Search");
+		selectEmployeePanel.add(lblNewLabel, "cell 1 1 3 1");
 
-		getContentPane().add(selectEmployeePanel, "cell 0 0, growx");
+		textField = new JTextField();
+		selectEmployeePanel.add(textField, "cell 4 1,growx");
+		textField.setColumns(10);
+
+		selectEmployeePanel.add(empListScrollPane, "cell 0 2 10 1,growx");
+
+		return selectEmployeePanel;
+
+	}
+
+	private void updateEmployeeDataFromSelection(int rowIndex) {
+
+		Employee selectedEmployee = employees.get(rowIndex);
+		FlatAnimatedLafChange.showSnapshot();
+
+		tfEmployeeID.setText(String.valueOf(selectedEmployee.getId()));
+		tfEmployeeName.setText(selectedEmployee.getFirstName() + " " + selectedEmployee.getLastName());
+		tfEmployeeDepartment.setText(selectedEmployee.getDepartment());
+		tfEmployeeWorkType.setText(selectedEmployee.getWorkType());
+		tfRatePerDay.setText(String.valueOf(selectedEmployee.getRatePerDay()));
+
+		calculatePayroll(); // Calculate payroll after updating data
+
+		revalidate();
+		repaint();
+		FlatAnimatedLafChange.hideSnapshotWithAnimation();
+
 	}
 
 	private void populateEmployeeList() {
-        if (employees == null) {
-            employees = new ArrayList<>();
-            return;
-        }
+		if (employees == null) {
+			employees = new ArrayList<>();
+			return;
+		}
 
-        EMPListModel.setRowCount(0); // Clear existing rows
+		EMPListModel.setRowCount(0); // Clear existing rows
 
-        for (Employee employee : employees) {
-            EMPListModel.addRow(new Object[] { 
-                employee.getId(), 
-                employee.getFirstName(), 
-                employee.getLastName(), 
-                employee.getDepartment(), 
-                employee.getWorkType(), 
-                "Select" // Add the "Select" button
-            });
-        }
-    }
+		for (Employee employee : employees) {
+			EMPListModel.addRow(new Object[] { employee.getId(), employee.getFirstName(), employee.getLastName(),
+					employee.getDepartment(), employee.getWorkType(), "Select" // Add the "Select" button
+			});
+		}
+	}
 
-	private void updateEmployeeDataFromSelection(int rowIndex) {
-        Employee selectedEmployee = employees.get(rowIndex);
-        tfEmployeeID.setText(String.valueOf(selectedEmployee.getId()));
-        tfEmployeeName.setText(selectedEmployee.getFirstName() + " " + selectedEmployee.getLastName());
-        tfEmployeeDepartment.setText(selectedEmployee.getDepartment());
-        tfEmployeeWorkType.setText(selectedEmployee.getWorkType());
-        tfRatePerDay.setText(String.valueOf(selectedEmployee.getRatePerDay()));
-
-        calculatePayroll(); // Calculate payroll after updating data
-    }
-
-	private void setupPayrollCalculationPanel() {
+	private JPanel setupPayrollCalculationPanel() {
 
 		JPanel payrollCalculationPanel = new JPanel(
 				new MigLayout("", "[100px,grow,center][][][][][][][][][100px,grow,center]",
-						"[center][][][][][][][][][][][100px][center]"));
-		getContentPane().add(payrollCalculationPanel, "cell 0 1, grow");
+						"[center][][][][][][][][][][][100px,grow][center]"));
 		JLabel lblEmployeeID = new JLabel("Employee ID:");
 		payrollCalculationPanel.add(lblEmployeeID, "cell 1 0,alignx left");
 
@@ -280,7 +293,24 @@ public class PayrollSystem extends JFrame {
 
 		btnCalculate = new JButton("Calculate");
 		payrollCalculationPanel.add(btnCalculate, "cell 7 9,growx");
+		
 		payrollHistoryTable = new JTable(tableModel);
+		payrollHistoryTable.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
+
+		TableColumnModel columnModel = payrollHistoryTable.getColumnModel();
+
+		columnModel.getColumn(0).setPreferredWidth(50);
+		columnModel.getColumn(0).setResizable(false);
+		columnModel.getColumn(1).setPreferredWidth(200);
+		columnModel.getColumn(2).setPreferredWidth(200);
+		columnModel.getColumn(3).setPreferredWidth(200);
+		columnModel.getColumn(4).setPreferredWidth(100);
+		columnModel.getColumn(5).setPreferredWidth(100);
+		columnModel.getColumn(6).setPreferredWidth(100);
+		columnModel.getColumn(7).setPreferredWidth(100);
+		columnModel.getColumn(8).setPreferredWidth(100);
+		columnModel.getColumn(9).setPreferredWidth(100);
+		columnModel.getColumn(10).setPreferredWidth(100);
 		refreshTable(tableModel);
 
 		JScrollPane scrollPane = new JScrollPane(payrollHistoryTable);
@@ -293,6 +323,9 @@ public class PayrollSystem extends JFrame {
 		});
 
 		payrollCalculationPanel.add(scrollPane, "cell 0 11 10 1, grow");
+
+		return payrollCalculationPanel;
+
 	}
 
 	private void calculatePayroll() {
@@ -329,10 +362,12 @@ public class PayrollSystem extends JFrame {
 					String.format("%.2f", overtimeHours), String.format("%.2f", bonus),
 					String.format("%.2f", totalDeductions), String.format("%.2f", netPay) });
 
-			DB.insertPayroll(employeeId, employeeName, employeeDepartment, employeeWorkType, grossPay, ratePerDay,
+			db.insertPayroll(employeeId, employeeName, employeeDepartment, employeeWorkType, grossPay, ratePerDay,
 					daysWorked, (int) overtimeHours, bonus, totalDeductions, netPay,
 					new Date(System.currentTimeMillis()));
-		} catch (NumberFormatException ex) {
+			
+			db.loadPayrollHistory(tableModel);
+			} catch (NumberFormatException ex) {
 			JOptionPane.showMessageDialog(this, "Please enter valid numeric values for all payroll fields.",
 					"Input Error", JOptionPane.ERROR_MESSAGE);
 		}
@@ -340,12 +375,9 @@ public class PayrollSystem extends JFrame {
 
 	private void refreshTable(DefaultTableModel model) {
 		model.setRowCount(0); // Clear existing rows
-		DB.loadPayrollHistory(model); // Load the updated payroll history
+		db.loadPayrollHistory(model); // Load the updated payroll history
 
 		FlatAnimatedLafChange.hideSnapshotWithAnimation(); // Provide smooth transition
 	}
 
-	public static void main(String[] ar) {
-		new PayrollSystem();
-	}
 }

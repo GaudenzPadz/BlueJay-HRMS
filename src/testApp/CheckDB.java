@@ -26,19 +26,19 @@ class DatabaseUtil {
 	}
 }
 
-public class EMA extends JFrame {
+public class CheckDB extends JFrame {
 	private static final long serialVersionUID = 213;
 	private Map<String, DefaultTableModel> tableModels;
 	private Connection connection;
 
-	public EMA() {
+	public CheckDB() {
 		setTitle("Check SQL");
 		setSize(1014, 370);
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		getContentPane().setLayout(new MigLayout("", "[984px,grow]", "[][461px][grow]"));
 
 		JButton reset = new JButton("Reset Tables");
-        reset.addActionListener(e -> resetTables());
+		reset.addActionListener(e -> resetTables());
 
 		getContentPane().add(reset, "flowx,cell 0 0");
 		this.setVisible(true);
@@ -53,7 +53,7 @@ public class EMA extends JFrame {
 
 		// Map for storing table models for easier management
 		tableModels = new HashMap<>();
-		String[] tableNames = { "employees", "attendance", "users", "types" };
+		String[] tableNames = { "employees", "deductions" , "department","attendance", "payroll", "users", "types" };
 		for (int i = 0; i < tableNames.length; i++) {
 			DefaultTableModel model = new DefaultTableModel();
 			tableModels.put(tableNames[i], model);
@@ -127,19 +127,7 @@ public class EMA extends JFrame {
 	}
 
 	public static void main(String[] args) {
-		SwingUtilities.invokeLater(EMA::new);
+		SwingUtilities.invokeLater(CheckDB::new);
 	}
 
-//	@Override
-//	public void dispose() {
-//		super.dispose();
-//		// Close the database connection when the frame is closed
-//		if (connection != null) {
-//			try {
-//				connection.close();
-//			} catch (SQLException e) {
-//				e.printStackTrace();
-//			}
-//		}
-//	}
 }

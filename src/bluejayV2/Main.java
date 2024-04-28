@@ -1,7 +1,6 @@
 package bluejayV2;
 
 import java.awt.Font;
-import java.sql.ResultSet;
 import java.sql.SQLException;
 
 import javax.swing.JOptionPane;
@@ -9,7 +8,6 @@ import javax.swing.UIManager;
 
 import com.formdev.flatlaf.FlatLightLaf;
 
-import bluejay.Employee;
 import bluejayDB.EmployeeDatabase;
 
 public class Main {
@@ -18,6 +16,7 @@ public class Main {
 
 	public static EmployeeDatabase DB;
 	public static Employee emp;
+
 	public static void main(String[] a) {
 		FlatLightLaf.setup();
 		UIManager.put("Button.arc", 999);
@@ -26,8 +25,14 @@ public class Main {
 
 		try {
 			DB = new EmployeeDatabase();
+			// Add a shutdown hook to close the database connection on exit
+			Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+				if (DB != null) {
+					DB.closeConnection(); // Ensure connection is closed
+				}
+			}));
 
-			frame = new GUI("Login", new LoginPanel(), 1200, 700, true, true);
+			frame = new GUI("Login", new LoginPanel(DB), 1200, 700, true, true);
 			frame.isDark(false);
 
 		} catch (SQLException | ClassNotFoundException e) {

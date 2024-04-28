@@ -16,8 +16,8 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
 
-import bluejay.Employee;
 import bluejayDB.EmployeeDatabase;
+import bluejayV2.Employee;
 import bluejayV2.Main;
 import net.miginfocom.swing.MigLayout;
 
@@ -39,10 +39,10 @@ public class ProfilePanel extends JPanel {
 	private JTextField textField;
 	private JTextField textField_1;
 	private Employee employee;
-
-	public ProfilePanel(Employee employee) {
+	
+	public ProfilePanel(Employee employee, EmployeeDatabase DB) {
 		this.employee = employee;
-
+		this.db = DB;
 		setLayout(new BorderLayout());
 
 		// Header Panel
@@ -63,7 +63,7 @@ public class ProfilePanel extends JPanel {
 		btnNewButton.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				Main.frame.replaceContentPane("Weld Well HRMS",new EmployeePanel(employee), getLayout());
+				Main.frame.replaceContentPane("Weld Well HRMS",new EmployeePanel(employee, db), getLayout());
 			}
 		});
 

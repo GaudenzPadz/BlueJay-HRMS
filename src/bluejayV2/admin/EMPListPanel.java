@@ -1,6 +1,7 @@
 package bluejayV2.admin;
 
 import java.awt.BorderLayout;
+import java.awt.Color;
 import java.awt.FlowLayout;
 import java.awt.Font;
 import java.awt.Image;
@@ -9,10 +10,13 @@ import java.awt.event.ActionListener;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ExecutionException;
 
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
+import javax.swing.JDialog;
 import javax.swing.JLabel;
 import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
@@ -23,6 +27,7 @@ import javax.swing.JTable;
 import javax.swing.JTextField;
 import javax.swing.RowFilter;
 import javax.swing.SwingConstants;
+import javax.swing.SwingWorker;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import javax.swing.event.TableModelEvent;
@@ -31,12 +36,9 @@ import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableColumnModel;
 import javax.swing.table.TableRowSorter;
 
-import com.formdev.flatlaf.extras.FlatAnimatedLafChange;
-
-import bluejay.Employee;
 import bluejayDB.EmployeeDatabase;
+import bluejayV2.Employee;
 import net.miginfocom.swing.MigLayout;
-import java.awt.Color;
 
 public class EMPListPanel extends JPanel {
 
@@ -49,8 +51,8 @@ public class EMPListPanel extends JPanel {
 	private JPopupMenu popupMenu;
 	private JMenuItem menuItemRemove, menuItemEdit;
 	public final Map<String, String> workTypeMap = new HashMap<>();
-	private String[] column = { "ID", "First Name", "Last Name", "Address", "Work Type", "Wage", "Gross Pay",
-			"Net Pay" };
+	private String[] column = { "ID", "First Name", "Last Name", "Address", "Department", "Work Type", "Wage",
+			"Gross Pay", "Net Pay" };
 	private EmployeeDatabase db;
 	private DefaultTableModel model = new DefaultTableModel(column, 0) {
 
@@ -71,16 +73,9 @@ public class EMPListPanel extends JPanel {
 	private JLabel lblNewLabel;
 	private JLabel errorLabel;
 
-	public EMPListPanel() {
-		try {
-			db = new EmployeeDatabase();
-			db.connect(); // Establish connection
-			System.out.println("Connected to the database successfully.");
-		} catch (SQLException | ClassNotFoundException ex) {
-			ex.printStackTrace();
-			JOptionPane.showMessageDialog(null, "Failed to connect to the database." + ex.getMessage(), "Error",
-					JOptionPane.ERROR_MESSAGE);
-		}
+	public EMPListPanel(EmployeeDatabase DB) {
+		this.db = DB;
+
 		// create a JTable
 		table = new JTable(model);
 		table.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
@@ -225,7 +220,7 @@ public class EMPListPanel extends JPanel {
 	protected void saveToDB() {
 		int selectedRow = table.getSelectedRow();
 		if (selectedRow == -1) {
-			errorLabel.setText("No row selected, select a row to sae changes");
+			errorLabel.setText("No row selected, select a row to save changes");
 
 			return; // No row selected, nothing to update
 		}
@@ -251,7 +246,7 @@ public class EMPListPanel extends JPanel {
 		updatedEmployee.setLastName(updatedLastName);
 		updatedEmployee.setAddress(updatedAddress);
 		updatedEmployee.setWorkType(updatedWorkType);
-		updatedEmployee.setRate(updatedRate); // Set the updated rate
+		updatedEmployee.setBasicSalary(updatedRate); // Set the updated rate
 
 		saveBtn.setEnabled(false);
 		// Update the employee information in the database
@@ -283,6 +278,7 @@ public class EMPListPanel extends JPanel {
 			int confirm = JOptionPane.showConfirmDialog(null, "Are you sure you want to delete this employee?",
 					"Confirm Deletion", JOptionPane.YES_NO_OPTION);
 			if (confirm == JOptionPane.YES_OPTION) {
+
 				db.deleteEmployeeData(employeeId, empName);
 
 				JOptionPane.showMessageDialog(null, "Employee deleted successfully.", "Success",
@@ -298,68 +294,98 @@ public class EMPListPanel extends JPanel {
 	}
 
 	private void calculatePay() {
-		try {
-			ResultSet rsEMP = db.getAllData();
-			while (rsEMP.next()) {
-				int employeeId = rsEMP.getInt("id");
-				double rate = rsEMP.getDouble("rate");
-				String firstName = rsEMP.getString("first_name");
-				String lastName = rsEMP.getString("last_name");
-				// String workType = rsEMP.getString("work_type");
+		for (int i = 0; i < model.getRowCount(); i++) {
+			int employeeId = (int) model.getValueAt(i, 0);
+			double rate = (double) model.getValueAt(i, 6);
+			String firstName = (String) model.getValueAt(i, 1);
+			String lastName = (String) model.getValueAt(i, 2);
 
-				// Count the number of attendances for the current employee
-				// double daysWorked = db.countAttendances(firstName + " " + lastName);
+			// Assuming days worked is stored in the model or needs to be calculated
+			int daysWorked = 15; // This should be dynamically calculated or retrieved if available
 
-				// Calculate gross pay based on the rate and number of days worked
-				Employee emp = new Employee();
-				int daysworked = 15; // sample data
-				emp.setPAG_IBIG(100);
-				emp.setSSS(570);
-				emp.setPHILHEALTH(500);
-				double grossPay = emp.calculateGrossPay(daysworked, rate); // daysworked * rate;
-				double netPay = emp.calculateNetPay(grossPay, emp.totalDeductions()); // grossPay - emp.total();
-				emp.setNetPay(netPay);
-				emp.setGrossPay(grossPay);
+			Employee emp = new Employee();
+			emp.setPAG_IBIG(100);
+			emp.setSSS(570);
+			emp.setPHILHEALTH(500);
+			double grossPay = emp.calculateGrossPay(daysWorked, rate);
+			double netPay = emp.calculateNetPay(grossPay, emp.totalDeductions());
 
-				// Update the corresponding cells in the table
-				for (int i = 0; i < model.getRowCount(); i++) {
-					if (model.getValueAt(i, 0).equals(employeeId)) {
-						model.setValueAt(grossPay, i, 6); // Update Gross Pay column
-						model.setValueAt(netPay, i, 7);
+			// Update the model directly
+			model.setValueAt(grossPay, i, 7);
+			model.setValueAt(netPay, i, 8);
 
-						db.updateData(employeeId, "grossPay", emp.getGrossPay());
-						db.updateData(employeeId, "netPay", emp.getNetPay());
-						System.out.println("CALCULATED!!");
-						break;
-					}
-				}
-			}
-		} catch (SQLException e) {
-			e.printStackTrace();
+			// // Update the database
+			// db.updateData(employeeId, "grossPay", grossPay);
+			// db.updateData(employeeId, "netPay", netPay);
 		}
 	}
 
 	private void refreshTable() {
-		try {
-			FlatAnimatedLafChange.showSnapshot();
-			ResultSet rs = db.getAllData();
-			DefaultTableModel model = (DefaultTableModel) table.getModel();
-			model.setRowCount(0); // Clear the existing rows
+		if (db == null) {
+			JOptionPane.showMessageDialog(null, "Database connection not established.", "Error",
+					JOptionPane.ERROR_MESSAGE);
+			return; // Early exit if db is null
+		}
 
-			while (rs.next()) {
-				Object[] row = { rs.getInt("id"), rs.getString("first_name"), rs.getString("last_name"),
-						rs.getString("address"), rs.getString("work_type"), rs.getDouble("rate"),
-						rs.getDouble("grossPay"), rs.getDouble("netPay") };
-				model.addRow(row); // Add the row to the table
+		new SwingWorker<Void, Object[]>() {
+			@Override
+			protected Void doInBackground() throws Exception {
+				try (ResultSet rs = db.getAllData()) {
+					while (rs.next()) {
+						publish(new Object[] {
+								rs.getInt("id"), rs.getString("first_name"), rs.getString("last_name"),
+								rs.getString("address"), rs.getString("department"), rs.getString("work_type"),
+								rs.getDouble("rate"), rs.getDouble("grossPay"), rs.getDouble("netPay")
+						});
+					}
+				}
+				return null;
 			}
 
-			// Update calculations after fetching all data
-			calculatePay();
-			FlatAnimatedLafChange.hideSnapshotWithAnimation();
+			@Override
+			protected void process(List<Object[]> chunks) {
+				DefaultTableModel model = (DefaultTableModel) table.getModel();
+				model.setRowCount(0); // Clear existing rows
+				for (Object[] row : chunks) {
+					model.addRow(row);
+				}
+			}
 
-		} catch (SQLException e) {
-			JOptionPane.showMessageDialog(null, "Failed to refresh employee data: " + e.getMessage(), "Error",
-					JOptionPane.ERROR_MESSAGE);
-		}
+			@Override
+			protected void done() {
+				try {
+					get(); // Handle exceptions during doInBackground
+					calculatePay(); // Update calculations
+				} catch (ExecutionException | InterruptedException e) {
+					JOptionPane.showMessageDialog(null, "Failed to refresh employee data: " + e.getCause().getMessage(),
+							"Error", JOptionPane.ERROR_MESSAGE);
+				}
+			}
+		}.execute();
+	}
+
+	// Implementing the loading dialog
+	private void showLoadingDialog() {
+		JDialog loadingDialog = new JDialog();
+		JLabel loadingLabel = new JLabel("Calculating pay, please wait...");
+		loadingDialog.setLocationRelativeTo(null);
+		loadingDialog.setTitle("Loading");
+		loadingDialog.add(loadingLabel);
+		loadingDialog.pack();
+		loadingDialog.setVisible(true);
+
+		SwingWorker<Void, Void> worker = new SwingWorker<Void, Void>() {
+			@Override
+			protected Void doInBackground() throws Exception {
+				calculatePay(); // Perform long running calculation
+				return null;
+			}
+
+			@Override
+			protected void done() {
+				loadingDialog.dispose(); // Close the dialog
+			}
+		};
+		worker.execute();
 	}
 }
