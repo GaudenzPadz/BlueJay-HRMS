@@ -2,6 +2,7 @@ package bluejayV2;
 
 import java.awt.Dimension;
 import java.awt.EventQueue;
+import java.awt.Font;
 import java.awt.Image;
 import java.awt.LayoutManager;
 
@@ -12,8 +13,8 @@ import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
 
-import com.formdev.flatlaf.FlatDarkLaf;
-import com.formdev.flatlaf.FlatLightLaf;
+import com.formdev.flatlaf.FlatDarculaLaf;
+import com.formdev.flatlaf.FlatIntelliJLaf;
 import com.formdev.flatlaf.extras.FlatAnimatedLafChange;
 
 public class GUI extends JFrame {
@@ -53,16 +54,24 @@ public class GUI extends JFrame {
 	public void isDark(boolean darkMode) {
 		try {
 			if (darkMode) {
-				FlatDarkLaf.setup();
+				FlatAnimatedLafChange.showSnapshot();
+				FlatDarculaLaf.setup();
+
 			} else {
-				FlatLightLaf.setup();
+				FlatAnimatedLafChange.showSnapshot();
+				FlatIntelliJLaf.setup();
+
 			}
-			UIManager.put("Button.arc", 999);
+			UIManager.put("Button.arc", 800);
 			UIManager.put("Component.arc", 50);
 			UIManager.put("ProgressBar.arc", 999);
-			UIManager.put("TextComponent.arc", 50);
+			UIManager.put("TextComponent.arc", 50);		
+			UIManager.put("defaultFont", new Font("SansSerif", Font.PLAIN, 13));
+
 
 			SwingUtilities.updateComponentTreeUI(this);
+			FlatAnimatedLafChange.hideSnapshotWithAnimation();
+
 		} catch (Exception ex) {
 			ex.printStackTrace();
 		}
