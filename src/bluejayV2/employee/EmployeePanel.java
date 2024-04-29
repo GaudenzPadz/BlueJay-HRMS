@@ -118,7 +118,7 @@ public class EmployeePanel extends JPanel {
 		checkPayrollCBtn.addMouseListener(new MouseAdapter() {
 			@Override
 			public void mouseClicked(MouseEvent e) {
-				System.out.println("Button 3 clicked!");
+				Main.frame.replaceContentPane("Attendance Form", new CheckPayrollPanel(employee, DB), getLayout());
 			}
 		});
 		menuPanel.add(checkPayrollCBtn, "cell 5 1,growx,aligny center");

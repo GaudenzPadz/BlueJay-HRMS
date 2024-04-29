@@ -137,10 +137,12 @@ public class LoginPanel extends JPanel {
 		if (loginResult.startsWith("Login successful!")) {
 			if (loginResult.contains("ADMIN")) {
 				Main.frame.replaceContentPane("Admin Panel", new AdminPanel(DB), new BorderLayout());
+				
 			} else if (loginResult.contains("Employee")) {
 				Employee employee = DB.getEmployeeDataByUsername(username);
 				if (employee != null) {
 					Main.frame.replaceContentPane("Weld Well HRMS", new EmployeePanel(employee, DB), new BorderLayout());
+					
 				} else {
 					JOptionPane.showMessageDialog(null, "No employee data found for this user");
 				}
@@ -152,7 +154,6 @@ public class LoginPanel extends JPanel {
 			JOptionPane.showMessageDialog(null, "Invalid username or password");
 		}
 	
-		// Do not close the connection here, as it may be needed elsewhere in the application.
 	}
 	
 }

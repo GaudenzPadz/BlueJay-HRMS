@@ -144,17 +144,17 @@ public class EMPListPanel extends JPanel {
 				// I DONT KNOW THE USE OF THIS ONE
 			}
 		});
-		searchPanel.setLayout(new MigLayout("", "[230.00px][40px][120.00px]", "[20px]"));
-
-		errorLabel = new JLabel("");
-		errorLabel.setForeground(Color.RED);
-		searchPanel.add(errorLabel, "cell 0 0,alignx left,aligny center");
+		searchPanel.setLayout(new MigLayout("", "[][40px][200.00px][][grow]", "[20px]"));
 		searchPanel.add(new JLabel("Search: "), "cell 1 0,alignx left,aligny center");
 		searchPanel.add(searchField, "cell 2 0,growx,aligny top");
 
 		JScrollPane scrollPane = new JScrollPane(table);
 		setLayout(new BorderLayout(10, 5));
 		add(searchPanel, BorderLayout.NORTH);
+		
+				errorLabel = new JLabel("error");
+				errorLabel.setForeground(Color.RED);
+				searchPanel.add(errorLabel, "cell 4 0,alignx leading,aligny center");
 		add(scrollPane, BorderLayout.CENTER);
 
 		panel = new JPanel();
@@ -370,7 +370,7 @@ public class EMPListPanel extends JPanel {
 		JLabel loadingLabel = new JLabel("Calculating pay, please wait...");
 		loadingDialog.setLocationRelativeTo(null);
 		loadingDialog.setTitle("Loading");
-		loadingDialog.add(loadingLabel);
+		loadingDialog.getContentPane().add(loadingLabel);
 		loadingDialog.pack();
 		loadingDialog.setVisible(true);
 

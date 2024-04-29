@@ -15,6 +15,7 @@ import java.text.SimpleDateFormat;
 import java.util.HashMap;
 import java.util.Map;
 
+import javax.swing.BorderFactory;
 import javax.swing.ButtonGroup;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
@@ -31,12 +32,12 @@ import javax.swing.JTextField;
 import javax.swing.ScrollPaneConstants;
 import javax.swing.SwingUtilities;
 import javax.swing.SwingWorker;
+import javax.swing.border.Border;
 import javax.swing.filechooser.FileNameExtensionFilter;
 
 import com.formdev.flatlaf.FlatClientProperties;
 
 import bluejayDB.EmployeeDatabase;
-import bluejayV2.Employee;
 import net.miginfocom.swing.MigLayout;
 
 public class AddEMPPanel extends JPanel {
@@ -386,71 +387,227 @@ public class AddEMPPanel extends JPanel {
 		}
 	}
 
+	private boolean validateInput() {
+		// Check that all required fields are filled
+		if (fNameField.getText().trim().isEmpty() || lNameField.getText().trim().isEmpty()
+				|| addressField.getText().trim().isEmpty() || telField.getText().trim().isEmpty()
+				|| emailField.getText().trim().isEmpty() || usernameField.getText().trim().isEmpty()
+				|| passwordField.getPassword().length == 0) {
+			JOptionPane.showMessageDialog(null, "Please fill in all required fields.", "Error",
+					JOptionPane.ERROR_MESSAGE);
+			return false;
+		}
+
+		// Validate the date of birth format
+		SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy");
+		sdf.setLenient(false); // Strict parsing
+		try {
+			sdf.parse(DOBField.getText().trim());
+		} catch (ParseException e) {
+			JOptionPane.showMessageDialog(null, "Invalid date format. Use dd/MM/yyyy.", "Error",
+					JOptionPane.ERROR_MESSAGE);
+			return false;
+		}
+
+		// Validate the email format
+		if (!emailField.getText().trim().matches("^[\\w.%+-]+@[\\w.-]+\\.[a-zA-Z]{2,}$")) {
+			JOptionPane.showMessageDialog(null, "Invalid email address.", "Error", JOptionPane.ERROR_MESSAGE);
+			return false;
+		}
+
+		// Validate the telephone number (example: only digits and length)
+		if (!telField.getText().trim().matches("^\\d{10,15}$")) {
+			JOptionPane.showMessageDialog(null, "Invalid telephone number. Use 10-15 digits.", "Error",
+					JOptionPane.ERROR_MESSAGE);
+			return false;
+		}
+
+		// Validate wage (ensure it is a valid number)
+		try {
+			Double.parseDouble(wageField.getText().trim());
+		} catch (NumberFormatException e) {
+			JOptionPane.showMessageDialog(null, "Invalid wage. Must be a number.", "Error", JOptionPane.ERROR_MESSAGE);
+			return false;
+		}
+
+		return true; // All validations passed
+	}
+
+	private boolean validateAndHighlight() {
+		boolean valid = true;
+		Color redBorder = Color.RED;
+
+		// Reset all borders to default
+		Color defaultBorder = Color.GRAY; // Change this to your default border color
+		resetFieldBorders(defaultBorder);
+
+		// Check required fields and highlight with red border if empty or invalid
+		if (fNameField.getText().trim().isEmpty()) {
+			fNameField.setBorder(javax.swing.BorderFactory.createLineBorder(redBorder));
+			valid = false;
+		}
+
+		if (lNameField.getText().trim().isEmpty()) {
+			lNameField.setBorder(javax.swing.BorderFactory.createLineBorder(redBorder));
+			valid = false;
+		}
+
+		if (addressField.getText().trim().isEmpty()) {
+			addressField.setBorder(javax.swing.BorderFactory.createLineBorder(redBorder));
+			valid = false;
+		}
+
+		if (emailField.getText().trim().isEmpty()) {
+			emailField.setBorder(javax.swing.BorderFactory.createLineBorder(redBorder));
+			valid = false;
+		}
+
+		if (telField.getText().trim().isEmpty() || !isValidPhoneNumber(telField.getText().trim())) {
+			telField.setBorder(javax.swing.BorderFactory.createLineBorder(redBorder));
+			valid = false;
+		}
+
+		if (usernameField.getText().trim().isEmpty()) {
+			usernameField.setBorder(javax.swing.BorderFactory.createLineBorder(redBorder));
+			valid = false;
+		}
+
+		if (passwordField.getPassword().length == 0) {
+			passwordField.setBorder(javax.swing.BorderFactory.createLineBorder(redBorder));
+			valid = false;
+		}
+
+		// Validate the date of birth
+		SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy");
+		sdf.setLenient(false); // Strict parsing
+		try {
+			sdf.parse(DOBField.getText().trim());
+		} catch (ParseException e) {
+			DOBField.setBorder(javax.swing.BorderFactory.createLineBorder(redBorder));
+			valid = false;
+		}
+		// Validate the image upload
+		if (!isValidImage(selectedFile)) {
+			valid = false;
+			uploadBtn.setBorder(javax.swing.BorderFactory.createLineBorder(redBorder));
+			//error label for image 
+		}
+
+		return valid; // Return true if all validations pass
+	}
+
+	private void resetFieldBorders(Color defaultBorder) {
+		Border defaultLineBorder = BorderFactory.createLineBorder(defaultBorder);
+
+		fNameField.setBorder(defaultLineBorder);
+		lNameField.setBorder(defaultLineBorder);
+		addressField.setBorder(defaultLineBorder);
+		telField.setBorder(defaultLineBorder);
+		emailField.setBorder(defaultLineBorder);
+		usernameField.setBorder(defaultLineBorder);
+		passwordField.setBorder(defaultLineBorder);
+		DOBField.setBorder(defaultLineBorder);
+	}
+
+	private boolean isValidPhoneNumber(String phoneNumber) {
+		// This regex allows digits, +, and - characters
+		String phoneRegex = "^[\\d+\\-]+$";
+		// Define a reasonable range for phone number length
+		int minLength = 10;
+		int maxLength = 15;
+
+		return phoneNumber.matches(phoneRegex) && phoneNumber.length() >= minLength
+				&& phoneNumber.length() <= maxLength;
+	}
+
+	private boolean isValidImage(File file) {
+		if (file == null) {
+			return false; // No file selected
+		}
+
+		String fileName = file.getName().toLowerCase();
+		// Check for valid extensions
+		if (!(fileName.endsWith(".jpg") || fileName.endsWith(".jpeg") || fileName.endsWith(".png"))) {
+			return false; // Invalid file extension
+		}
+
+		// Check for reasonable file size (e.g., less than 5 MB)
+		long fileSize = file.length();
+		long maxFileSize = 5 * 1024 * 1024; // 5 MB in bytes
+		if (fileSize > maxFileSize) {
+			return false; // File size too large
+		}
+
+		return true; // File is valid
+	}
+
 	private void addButtonClicked(ActionEvent e) {
-	    // Retrieve text from fields
-	    String firstName = fNameField.getText();
-	    String lastName = lNameField.getText();
-	    String address = addressField.getText();
-	    String selectedDepartment = (String) departmentComboBox.getSelectedItem(); // Get selected department name
+		// Retrieve text from fields
+		String firstName = fNameField.getText();
+		String lastName = lNameField.getText();
+		String address = addressField.getText();
+		String selectedDepartment = (String) departmentComboBox.getSelectedItem(); // Get selected department name
 
-	    int departmentId = db.getDepartmentId(selectedDepartment); // Get the department ID based on the name
-	    String workType = (String) workTypeCombobox.getSelectedItem();
-	    String gender = radioMale.isSelected() ? "Male" : "Female";
-	    String telNum = telField.getText();
-	    String email = emailField.getText();
-	    String username = usernameField.getText();
-	    String password = new String(passwordField.getPassword());
+		int departmentId = db.getDepartmentId(selectedDepartment); // Get the department ID based on the name
+		String workType = (String) workTypeCombobox.getSelectedItem();
+		String gender = radioMale.isSelected() ? "Male" : "Female";
+		String telNum = telField.getText();
+		String email = emailField.getText();
+		String username = usernameField.getText();
+		String password = new String(passwordField.getPassword());
 
-	    // Validate and parse date of birth
-	    String dobText = DOBField.getText();
-	    SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy");
-	    sdf.setLenient(false); // Ensures strict parsing
-	    java.sql.Date DOB = null; 
-	    try {
-	        java.util.Date parsedDate = sdf.parse(dobText); 
-	        DOB = new java.sql.Date(parsedDate.getTime()); 
-	    } catch (ParseException ex) {
-	        DOBField.putClientProperty("JComponent.outline", Color.RED); 
-	        JOptionPane.showMessageDialog(null, "Invalid date format.", "Error", JOptionPane.ERROR_MESSAGE);
-	        return; // Exit if DOB is invalid
-	    }
+		// Validate and parse date of birth
+		String dobText = DOBField.getText();
+		SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy");
+		sdf.setLenient(false); // Ensures strict parsing
+		java.sql.Date DOB = null;
+		try {
+			java.util.Date parsedDate = sdf.parse(dobText);
+			DOB = new java.sql.Date(parsedDate.getTime());
+		} catch (ParseException ex) {
+			DOBField.putClientProperty("JComponent.outline", Color.RED);
+			JOptionPane.showMessageDialog(null, "Invalid date format.", "Error", JOptionPane.ERROR_MESSAGE);
+			return; // Exit if DOB is invalid
+		}
 
-	    // Ensure required fields are filled
-	    if (firstName.isEmpty() || lastName.isEmpty() || address.isEmpty()) {
-	        JOptionPane.showMessageDialog(null, "Please fill in all required fields.", "Error",
-	                                    JOptionPane.ERROR_MESSAGE);
-	        return; // Exit early if mandatory fields are empty
-	    }
+		// Ensure required fields are filled
+		if (!validateAndHighlight()) {
+			JOptionPane.showMessageDialog(null, "Please correct the highlighted fields.", "Error",
+					JOptionPane.ERROR_MESSAGE);
+			return; // Exit early if validation fails
+		}
 
-	    try {
-	        byte[] imageData = fileToByteArray(selectedFile);
-	        double wage = Double.valueOf(wageField.getText());
-	        db.insertEMPData(firstName, lastName, address, workType, wage, gender, telNum, DOB, email, imageData,
-	                         departmentId); 
-	        db.insertEMPCredentials(firstName + " " + lastName, username, password, "Employee");
+		try {
+			byte[] imageData = fileToByteArray(selectedFile);
+			double wage = Double.valueOf(wageField.getText());
+			db.insertEMPData(firstName, lastName, address, workType, wage, gender, telNum, DOB, email, imageData,
+					departmentId);
+			db.insertEMPCredentials(firstName + " " + lastName, username, password, "Employee");
 
-	        JOptionPane.showMessageDialog(null, "Employee added successfully.", "Success", JOptionPane.INFORMATION_MESSAGE);
+			JOptionPane.showMessageDialog(null, "Employee added successfully.", "Success",
+					JOptionPane.INFORMATION_MESSAGE);
 
-	        // Clear the fields after successful insertion
-	        fNameField.setText("");
-	        lNameField.setText("");
-	        addressField.setText("");
-	        telField.setText("");
-	        emailField.setText("");
-	        DOBField.setText("");
-	        workTypeCombobox.setSelectedItem(null);
-	        usernameField.setText("");
-	        passwordField.setText("");
+			// Clear the fields after successful insertion
+			fNameField.setText("");
+			lNameField.setText("");
+			addressField.setText("");
+			telField.setText("");
+			emailField.setText("");
+			DOBField.setText("");
+			workTypeCombobox.setSelectedItem(null);
+			usernameField.setText("");
+			passwordField.setText("");
 
-	        // Clear the image from the profile panel
-	        imageLabel.setIcon(null); // Remove the image
-	        selectedFile = null; // Reset the selected file to indicate no image
-	        imageLabel.setText("Profile"); // Reset the label text
+			// Clear the image from the profile panel
+			imageLabel.setIcon(null); // Remove the image
+			selectedFile = null; // Reset the selected file to indicate no image
+			imageLabel.setText("Profile"); // Reset the label text
 
-	    } catch (Exception ex) {
-	        JOptionPane.showMessageDialog(null, "An error occurred while adding the employee. Please try again.", "Error", JOptionPane.ERROR_MESSAGE);
-	        ex.printStackTrace();
-	    }
+		} catch (Exception ex) {
+			JOptionPane.showMessageDialog(null, "An error occurred while adding the employee. Please try again.",
+					"Error", JOptionPane.ERROR_MESSAGE);
+			ex.printStackTrace();
+		}
 	}
 
 	private byte[] fileToByteArray(File file) {
